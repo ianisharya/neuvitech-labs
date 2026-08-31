@@ -12,6 +12,14 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
+# The base image ships an APT source for Yarn with no importable signing
+# key. Debian refuses to trust an unsigned repo and aborts `apt-get update`
+# entirely — which took down every package below with it on first build
+# (31 Aug 2026, macOS/arm64). We install Node via NodeSource further down
+# and never touch this source, so disable it outright rather than chase a
+# key that may rotate under us.
+RUN rm -f /etc/apt/sources.list.d/yarn.list 2>/dev/null || true
+
 # System tooling.
 #   postgresql-client — psql, for inspecting the database directly
 #   redis-tools       — redis-cli
