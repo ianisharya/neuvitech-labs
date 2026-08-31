@@ -1,0 +1,25 @@
+# Every PR needs a review from the other track. These paths need one from a
+# specific owner because a mistake in them is expensive or irreversible.
+
+
+*                           @ianisharya @manu2raj
+
+# Schema changes are close to irreversible once deployed.
+/apps/api/migrations/       @ianisharya @manu2raj
+/apps/api/src/neuvitech/db/ @ianisharya @manu2raj
+
+# Authorization mistakes are silent until exploited.
+/apps/api/src/neuvitech/security/  @ianisharya @manu2raj
+
+# Money.
+/apps/api/src/neuvitech/modules/commerce/     @ianisharya @manu2raj
+/apps/api/src/neuvitech/modules/payments/     @ianisharya @manu2raj
+/apps/api/src/neuvitech/modules/entitlement/  @ianisharya @manu2raj
+
+# Pipeline and infrastructure changes affect every environment.
+/.github/          @ianisharya @manu2raj
+/infrastructure/   @ianisharya @manu2raj
+/.devcontainer/    @ianisharya @manu2raj
+
+# The source of truth. Changes here change how everyone works.
+/docs/             @ianisharya @manu2raj

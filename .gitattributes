@@ -1,0 +1,40 @@
+# Line endings. This file is why a Windows checkout does not appear as
+# "every file modified" to the macOS engineer, and why shell scripts do not
+# die with `bad interpreter: ^M` inside the Linux container.
+* text=auto eol=lf
+
+# Explicitly LF — these run inside the container.
+*.sh        text eol=lf
+*.py        text eol=lf
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.js        text eol=lf
+*.jsx       text eol=lf
+*.json      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.toml      text eol=lf
+*.md        text eol=lf
+*.sql       text eol=lf
+*.css       text eol=lf
+Makefile    text eol=lf
+Dockerfile  text eol=lf
+*.env*      text eol=lf
+
+# Binary — never touch these.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.zip binary
+*.xlsx binary
+
+# Generated. Committed (so CI can detect drift) but collapsed in diffs.
+uv.lock            linguist-generated=true -diff
+package-lock.json  linguist-generated=true -diff
+packages/contracts/**  linguist-generated=true

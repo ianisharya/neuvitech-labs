@@ -1,0 +1,93 @@
+// NeuViTech Labs — the cross-platform contract.
+//
+// This file is the reason macOS and Windows behave identically. After
+// "Reopen in Container", both machines run the same Python, Node, uv and
+// tooling. Any divergence between the two machines is a bug HERE, and is
+// fixed here — never worked around on one laptop.
+//
+// SPRINT 1 (now): standalone build. No compose services yet, deliberately —
+//   the Day 6 first build is the highest-risk task in the sprint, so it has
+//   the fewest moving parts possible.
+// SPRINT 2 (NVL-202): this gains "dockerComposeFile" so the container joins
+//   the Postgres/Redis/MinIO/Mailpit network and reaches them by service name.
+{
+  "name": "NeuViTech Labs",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+
+  "features": {
+    // Lets `docker` and `docker compose` work from inside the container by
+    // talking to the host daemon. Needed from Sprint 2 for `make up`.
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "version": "latest",
+      "moby": false
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      // Pinned here so BOTH machines get the same extension set automatically.
+      // Do not install these on the host — that reintroduces the drift this
+      // container exists to prevent.
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff",
+        "ms-python.mypy-type-checker",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens",
+        "usernamehw.errorlens",
+        "editorconfig.editorconfig",
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml",
+        "GitHub.copilot",
+        "GitHub.vscode-pull-request-github"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.rulers": [100],
+        "files.eol": "\n",
+        "files.insertFinalNewline": true,
+        "files.trimTrailingWhitespace": true,
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.testing.pytestEnabled": true,
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.codeActionsOnSave": { "source.organizeImports.ruff": "explicit" }
+        },
+        "[typescript]":       { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+        "[typescriptreact]":  { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+        "[json]":             { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+        "[jsonc]":            { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  // Forwarded now so they work the moment the apps exist in Sprint 2.
+  "forwardPorts": [3000, 8000, 5432, 6379, 8025, 9001],
+  "portsAttributes": {
+    "3000": { "label": "web (Next.js)" },
+    "8000": { "label": "api (FastAPI)" },
+    "5432": { "label": "postgres" },
+    "6379": { "label": "redis" },
+    "8025": { "label": "mailpit" },
+    "9001": { "label": "minio console" }
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  // Never run as root: bind-mounted files would become root-owned on your host.
+  "remoteUser": "vscode",
+
+  "remoteEnv": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONUNBUFFERED": "1",
+    "UV_LINK_MODE": "copy"
+  }
+}

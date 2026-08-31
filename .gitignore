@@ -1,0 +1,67 @@
+# ---- Secrets. Ordering matters: this rule exists before any .env does. ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+secrets/
+.secrets
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+
+# ---- Node ----
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+npm-debug.log*
+.eslintcache
+
+# ---- Testing ----
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+
+# ---- Infrastructure. Never commit state: it contains secrets in plaintext. ----
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.tofu/
+
+# ---- Local data ----
+*.db
+*.sqlite3
+/data/
+/uploads/
+/media/
+
+# ---- Editor / OS ----
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.shared.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# ---- Logs ----
+*.log
+logs/
