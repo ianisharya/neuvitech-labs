@@ -2,8 +2,28 @@
 
 **NeuViTech Labs — Engineering & Delivery Plan**
 **Domain:** neuvitechlabs.com · **Repository:** github.com/ianisharya/neuvitech-labs
-**Status:** PLANNED. No production code written. No external system modified.
-**Version:** 1.0 — Final. This is the single source of truth.
+**Status:** Sprint 1, Day 2 in progress. Not planned-and-untouched — see below.
+**Version:** 1.1 — updated 1 Sep 2026 against real execution, not just the original plan.
+
+---
+
+## Where things actually stand
+
+The rest of this document describes the plan as designed. This section is the honest delta between that plan and what has actually happened, so nobody mistakes "PLANNED" for the current state.
+
+| Sprint 1 story | State |
+|---|---|
+| NVL-101 Host prerequisites | Anish: confirmed. Manuraj: instructions given, no result reported back |
+| NVL-102 Repository governance | Bootstrapped and pushed to `main`. 102.4 (both engineers actually reading the governance files) not yet confirmed |
+| NVL-103 Dev Container | **VERIFIED** on macOS — `make doctor` clean, including a Postgres client version fix. Not yet attempted on Windows |
+| NVL-104 Cross-platform validation | **Blocked** — cannot start until Manuraj has a working build to compare against |
+| NVL-105 Jira configuration | Partially done — epic and six stories created live via the Atlassian connector. Project key rename (`SCRUM`→`NVL`), sample-issue cleanup, and a `BLOCKED`-status-miscategorized-as-`Done` bug are still open — `docs/26` §6 |
+| NVL-106 CI pipeline | Not started |
+| NVL-EXT-01 Razorpay KYC | Not confirmed started — the single highest-risk item in the programme, still needs action |
+
+**Two real bugs found and fixed on the only machine tested so far:** the base Dev Container image ships a Yarn apt source with no importable signing key, which aborted `apt-get update` entirely; and Debian's default `postgresql-client` resolves to 15.x against a Postgres 16 spec. Both fixed in `.devcontainer/Dockerfile`, both written up in `docs/36-troubleshooting-guide.md` §11 so nobody rediscovers them. Full session replay, command by command: `docs/38-day-01-02-command-log.md`.
+
+**Still genuinely open, unanswered:** who holds GitHub repository admin, and the licence. Both were asked early and never resolved — see "Still open" at the end of this document.
 
 ---
 
@@ -17,7 +37,7 @@ It contains one architecture, one technology stack, one workflow. There are no a
 
 ## The project in one paragraph
 
-The repository is **empty** (verified — zero commits). We are building an EdTech-first technology education platform: a first-class product catalog (Programs, Tracks, Specializations, Masterclasses, Free Certification Courses, Certificates, Brochures), a real LMS, real commerce with payments and entitlements, a community and careers layer, and a guardrailed agentic-AI layer. **Everything is database-driven — including configuration, navigation, branding, feature flags and product definitions.** Nothing that a non-engineer might need to change is hard-coded. The stack is Python 3.12 + FastAPI + PostgreSQL 16 + Redis + Next.js 15, developed inside a **VS Code Dev Container** so the MacBook and the Windows machine are byte-identical. **20 sprints of 14 days**, starting **Monday 31 August 2026**, production launch **14 March 2027**, full scope **6 June 2027**.
+We are building an EdTech-first technology education platform: a first-class product catalog (Programs, Tracks, Specializations, Masterclasses, Free Certification Courses, Certificates, Brochures), a real LMS, real commerce with payments and entitlements, a community and careers layer, and a guardrailed agentic-AI layer. **Everything is database-driven — including configuration, navigation, branding, feature flags and product definitions.** Nothing that a non-engineer might need to change is hard-coded. The stack is Python 3.12 + FastAPI + PostgreSQL 16 + Redis + Next.js 15, developed inside a **VS Code Dev Container** so the MacBook and the Windows machine are byte-identical. **20 sprints of 14 days**, starting **Monday 31 August 2026**, production launch **14 March 2027**, full scope **6 June 2027**.
 
 ---
 
@@ -28,7 +48,7 @@ Numbered for reading order. Every document is self-contained enough to be read o
 ### Part 1 — Context and decisions
 | # | Document | What it answers |
 |---|---|---|
-| 01 | `01-repository-and-environment-audit.md` | What exists today? (Nothing — here is the evidence) |
+| 01 | `01-repository-and-environment-audit.md` | What existed at the start? (Nothing — here is the evidence) |
 | 02 | `02-product-vision-and-strategy.md` | What are we building and for whom? |
 | 03 | `03-final-technology-decisions.md` | **Exactly which technologies, and why. No alternatives.** |
 
@@ -65,7 +85,7 @@ Numbered for reading order. Every document is self-contained enough to be read o
 |---|---|---|
 | 24 | `24-capacity-and-estimation-model.md` | **How every estimate was derived** |
 | 25 | `25-master-roadmap.md` | 20 sprints, 5 phases, milestones |
-| 26 | `26-jira-structure.md` | Project config, issue types, workflow, fields |
+| 26 | `26-jira-structure.md` | Project config, issue types, workflow, fields — includes the confirmed 16-state workflow and outstanding config |
 | 27 | `27-jira-backlog.md` | **Epic → Story → Task → Subtask, with all fields** |
 | 28 | `28-sprint-01-plan.md` | Sprint 1, session by session |
 | 29 | `29-day-by-day-schedule.md` | **Every session, hours, owner, tasks** |
@@ -79,8 +99,9 @@ Numbered for reading order. Every document is self-contained enough to be read o
 | 33 | `33-runbooks-and-operations.md` | What to do at 2am when something breaks |
 | 34 | `34-definition-of-ready-and-done.md` | When is work actually finished? |
 | 35 | `35-glossary.md` | Every term explained |
-| 36 | `36-troubleshooting-guide.md` | The failures you will actually hit |
+| 36 | `36-troubleshooting-guide.md` | The failures you will actually hit — now includes two real Dev Container findings |
 | 37 | `37-onboarding-guide.md` | **New joiner: read this first** |
+| 38 | `38-day-01-02-command-log.md` | Every command actually run to stand up the environment, by flow and by type |
 
 ### Decisions
 `adr/` — ADR-0001 to ADR-0014, each recording context, decision, alternatives rejected, consequences, trade-offs, cost, security, scalability, migration path and revisit trigger.
@@ -89,8 +110,8 @@ Numbered for reading order. Every document is self-contained enough to be read o
 | File | Purpose |
 |---|---|
 | `neuvitech-labs-plan.xlsx` | 280-day schedule, capacity model, sprint summary, Sprint 1 detail, risk register |
-| `jira-import-epics.csv` | All epics |
-| `jira-import-sprint-01.csv` | Sprint 1 stories, tasks and subtasks with full fields |
+| `jira-import-epics.csv` | All epics — superseded for Sprint 1 now that the real issues exist in Jira; still the reference for Sprints 2–20 |
+| `jira-import-sprint-01.csv` | Sprint 1 stories, tasks and subtasks with full fields — same note |
 
 ---
 
@@ -99,6 +120,8 @@ Numbered for reading order. Every document is self-contained enough to be read o
 **Before Day 1 (both of you, ≈60 min):** 03 → 16 → 22 → 24 → 28
 
 **New engineer joining later (≈3 hours):** 37 → 02 → 03 → 04 → 05 → 06 → 16 → 18 → 23
+
+**Picking this up mid-Sprint-1, right now:** 27 (what's ticketed) → 36 §11 (what's already broken and fixed) → 38 (exactly what was typed to get here)
 
 **"I need to change something in the catalog":** 06 → 05 → 27
 
@@ -111,30 +134,31 @@ Numbered for reading order. Every document is self-contained enough to be read o
 These govern every decision in this pack. If a future change violates one, it needs an ADR.
 
 1. **Nothing is hard-coded.** Configuration, navigation, branding, feature flags, pricing rules, email templates, product definitions and page metadata all come from the database. Only bootstrap secrets live in environment variables.
-2. **One environment definition.** The Dev Container is the environment. Mac and Windows are identical after "Reopen in Container".
+2. **One environment definition.** The Dev Container is the environment. Mac and Windows are identical after "Reopen in Container" — **verified true on one machine as of 1 Sep 2026, pending the second.**
 3. **The catalog is data, not code.** A new product type is a row, not a migration and a rewrite.
 4. **Payment never equals access.** Entitlements are a separate, auditable grant.
 5. **Default deny.** Every endpoint declares a permission or is explicitly public; one that declares neither fails at startup.
 6. **Observability is part of the product**, not added at the end.
-7. **Nothing is claimed without evidence.** `IMPLEMENTED` is not `VERIFIED`.
+7. **Nothing is claimed without evidence.** `IMPLEMENTED` is not `VERIFIED`. This is why the table at the top of this document distinguishes the two.
 8. **Humans are engineers here**, not a review queue. Analysis, experimentation, operations and production ownership are real work with real time allocated.
 
 ---
 
 ## Verified facts
 
-- Repository `ianisharya/neuvitech-labs`: **exists, public, zero commits, zero branches.** `git ls-remote` returned no refs.
-- Jira `neuvitech-labs.atlassian.net`: **not reachable from my environment.** Nothing configured, nothing created. CSV imports provided.
-- **31 August 2026 is a Monday.** Sprints run Mon→Sun, giving identical capacity every sprint.
-- **Docker is absent from my authoring environment.** Container work is `IMPLEMENTED` until your machine or CI proves it.
+- **Repository:** no longer empty. `NVL-102` (bootstrap: governance, Dev Container, docs) is on `main`, plus two follow-up commits fixing real Dev Container build failures. Full history in `docs/38`.
+- **Jira:** the Atlassian MCP connector is connected and confirmed working — not the "unreachable" state this pack originally assumed. Site is `neuvitech-labs.atlassian.net`; the project's actual key is **`SCRUM`**, not the `NVL` this pack assumes throughout. Every ticket summary carries the plan ID (`NVL-101 · …`) specifically so the two stay traceable regardless — see `docs/26` §6. Rename recommended, not yet applied.
+- **31 August 2026 is a Monday.** Sprints run Mon→Sun, giving identical capacity every sprint. Permanent fact, unaffected by anything above.
+- **The Dev Container has been built and verified on one real machine** (macOS/arm64) — not merely authored. Docker was never available in the AI's own authoring environment, which is why every container-related claim in this pack was written as `IMPLEMENTED, not VERIFIED` until proven otherwise. It has now been proven, once. The second machine is the remaining proof.
 
-## What I need at the start of Day 1
+## Still open
 
-| Question | Needed for |
-|---|---|
-| Who holds **GitHub repository admin**? | Branch protection, Sprint 1 |
-| Jira: Atlassian MCP connector, or CSV import? | Whether I can create issues |
-| Licence: proprietary or open source? | First commit |
-| Confirm `neuvitechlabs.com` is registered, or shall it be? | Sprint 5 SEO, Sprint 12 deploy |
+| Question | Asked | Status |
+|---|---|---|
+| Who holds **GitHub repository admin**? | Day 1 | **Never answered.** Blocks NVL-106.5 (branch protection) |
+| Licence: proprietary or open source? | Day 1 | **Never answered.** `LICENSE` file still absent |
+| Is `neuvitechlabs.com` registered? | Day 1 | Not yet asked again since the original prompt |
+| Jira: connector or CSV? | Day 1 | **Resolved** — connector, confirmed working |
+| Manuraj's GitHub handle | Later | **Resolved** — `manu2raj`, applied in `CODEOWNERS` |
 
-Everything else I have decided.
+The first two have been open since the very start of Sprint 1 and are worth closing before they become blockers rather than open questions — `LICENSE` costs nothing to decide now and a great deal to change once contributors and dependencies assume one.
