@@ -14,24 +14,34 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # The base image ships an APT source for Yarn with no importable signing
 # key. Debian refuses to trust an unsigned repo and aborts `apt-get update`
-# entirely — which took down every package below with it on first build
-# (31 Aug 2026, macOS/arm64). We install Node via NodeSource further down
-# and never touch this source, so disable it outright rather than chase a
-# key that may rotate under us.
+# entirely — which took down every other package in the same RUN line on
+# first build (31 Aug 2026, macOS/arm64). We install Node via NodeSource
+# and never use this source, so remove it before the first update rather
+# than import a key that may rotate.
 RUN rm -f /etc/apt/sources.list.d/yarn.list 2>/dev/null || true
 
+# PGDG's own repo, not Debian's. bookworm's default `postgresql-client`
+# resolves to 15.x, but our server is Postgres 16 (docs/03, ADR-0003) and
+# an older client talking to a newer major-version server is the wrong
+# direction and breaks in ways that are unpleasant to debug mid-sprint.
+# Found via `make doctor` reporting psql 15.19 against a spec of 16.
+RUN curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+        | gpg --dearmor -o /usr/share/keyrings/postgresql.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
+        > /etc/apt/sources.list.d/pgdg.list
+
 # System tooling.
-#   postgresql-client — psql, for inspecting the database directly
-#   redis-tools       — redis-cli
-#   make              — the single command interface (docs/03 section 5)
-#   jq/curl           — API testing and scripting
+#   postgresql-client-16 — psql, matching the server version exactly
+#   redis-tools          — redis-cli
+#   make                 — the single command interface (docs/03 section 5)
+#   jq/curl              — API testing and scripting
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential \
         curl \
         git \
         jq \
         make \
-        postgresql-client \
+        postgresql-client-16 \
         redis-tools \
         unzip \
         wget \

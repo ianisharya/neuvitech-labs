@@ -83,3 +83,34 @@ order = (await session.execute(stmt)).scalar_one()
 4. Ask Copilot to explain the error
 5. **Paste the full output to me** with what you tried
 6. Add the fix to this document so it is solved once, not repeatedly
+
+## 11. Dev Container first-build failures — found 31 Aug 2026
+
+### `NO_PUBKEY 62D54FD4003F6525` on `apt-get update`
+
+**Symptom:** the whole `apt-get update && apt-get install` line fails with `exit code: 100`, and the error names packages that have nothing to do with what you asked for.
+
+**Cause:** `mcr.microsoft.com/devcontainers/python:1-3.12-bookworm` ships a Yarn APT source (`/etc/apt/sources.list.d/yarn.list`) with no importable signing key. Debian refuses to trust an unsigned repo and aborts the **entire** update, taking every other package down with it — not just Yarn's.
+
+**Fix:** remove the source before the first `apt-get update`:
+```dockerfile
+RUN rm -f /etc/apt/sources.list.d/yarn.list 2>/dev/null || true
+```
+We install Node via NodeSource anyway, so this source is never needed.
+
+### `psql` reports an older major version than the server
+
+**Symptom:** `make doctor` shows `psql 15.19` when the spec (`docs/03`, ADR-0003) calls for Postgres 16.
+
+**Cause:** Debian bookworm's default `postgresql-client` package resolves to 15.x. The base image was never asked for 16 explicitly.
+
+**Fix:** pull from PGDG's own repo and install `postgresql-client-16` by name:
+```dockerfile
+RUN curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+        | gpg --dearmor -o /usr/share/keyrings/postgresql.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
+        > /etc/apt/sources.list.d/pgdg.list
+```
+then `postgresql-client-16` in place of `postgresql-client` in the install list.
+
+**Unverified as of this writing:** the `gpg --dearmor` step assumes `gnupg` is present in the base image. If the build fails with `gpg: command not found`, add `gnupg ca-certificates` to the main package list and move the PGDG key step after that install completes.
