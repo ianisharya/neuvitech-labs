@@ -23,6 +23,12 @@ htmlcov/
 dist/
 build/
 
+# ---- Dev Container ----
+# devcontainer-lock.json is intentionally TRACKED, not ignored. It pins the
+# resolved version/digest of every Feature in devcontainer.json, the same
+# role uv.lock plays for Python deps and package-lock.json plays for Node.
+# Do not add it here.
+
 # ---- Node ----
 node_modules/
 .next/
