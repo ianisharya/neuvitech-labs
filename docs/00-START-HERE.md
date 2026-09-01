@@ -13,9 +13,9 @@ The rest of this document describes the plan as designed. This section is the ho
 
 | Sprint 1 story | State |
 |---|---|
-| NVL-101 Host prerequisites | Anish: confirmed. Manuraj: instructions given, no result reported back |
+| NVL-101 Host prerequisites | Anish: ✅ confirmed. Manuraj: ⏳ instructions given, no result reported back |
 | NVL-102 Repository governance | Bootstrapped and pushed to `main`. 102.4 (both engineers actually reading the governance files) not yet confirmed |
-| NVL-103 Dev Container | **VERIFIED** on macOS — `make doctor` clean, including a Postgres client version fix. Not yet attempted on Windows |
+| NVL-103 Dev Container | ✅ **VERIFIED** on macOS — `make doctor` clean, including a Postgres client version fix. Not yet attempted on Windows |
 | NVL-104 Cross-platform validation | **Blocked** — cannot start until Manuraj has a working build to compare against |
 | NVL-105 Jira configuration | Partially done — epic and six stories created live via the Atlassian connector. Project key rename (`SCRUM`→`NVL`), sample-issue cleanup, and a `BLOCKED`-status-miscategorized-as-`Done` bug are still open — `docs/26` §6 |
 | NVL-106 CI pipeline | Not started |
@@ -23,7 +23,7 @@ The rest of this document describes the plan as designed. This section is the ho
 
 **Two real bugs found and fixed on the only machine tested so far:** the base Dev Container image ships a Yarn apt source with no importable signing key, which aborted `apt-get update` entirely; and Debian's default `postgresql-client` resolves to 15.x against a Postgres 16 spec. Both fixed in `.devcontainer/Dockerfile`, both written up in `docs/36-troubleshooting-guide.md` §11 so nobody rediscovers them. Full session replay, command by command: `docs/38-day-01-02-command-log.md`.
 
-**Still genuinely open, unanswered:** who holds GitHub repository admin, and the licence. Both were asked early and never resolved — see "Still open" at the end of this document.
+**One item remains genuinely open from the original Day 1 list.** GitHub repository admin and the licence were both answered 1 Sep; domain registration was briefly reported resolved in error and has been corrected back to open — see "Still open" at the end of this document.
 
 ---
 
@@ -155,10 +155,10 @@ These govern every decision in this pack. If a future change violates one, it ne
 
 | Question | Asked | Status |
 |---|---|---|
-| Who holds **GitHub repository admin**? | Day 1 | **Never answered.** Blocks NVL-106.5 (branch protection) |
-| Licence: proprietary or open source? | Day 1 | **Never answered.** `LICENSE` file still absent |
-| Is `neuvitechlabs.com` registered? | Day 1 | Not yet asked again since the original prompt |
+| Who holds **GitHub repository admin**? | Day 1 | **Resolved 1 Sep** — Anish Arya. Unblocked NVL-106.5 (branch protection), now configured |
+| Licence: proprietary or open source? | Day 1 | **Resolved 1 Sep** — proprietary. `LICENSE` committed |
+| Is `neuvitechlabs.com` registered? | Day 1 | **Not registered as of 1 Sep** — confirmed not yet done, corrected after an earlier false report |
 | Jira: connector or CSV? | Day 1 | **Resolved** — connector, confirmed working |
 | Manuraj's GitHub handle | Later | **Resolved** — `manu2raj`, applied in `CODEOWNERS` |
 
-The first two have been open since the very start of Sprint 1 and are worth closing before they become blockers rather than open questions — `LICENSE` costs nothing to decide now and a great deal to change once contributors and dependencies assume one.
+One genuinely open item remains: domain registration. Two notes on what's already closed — the `LICENSE` file names Anish Arya personally as copyright holder, since no incorporated entity has been established for NeuViTech Labs yet; and branch protection is live on `main`, so every change from here on goes through a PR, not a direct push.
