@@ -158,8 +158,8 @@
 | NVL-210 | Test harness + full CI gate chain | AI+TM | 4 | pytest async fixtures, DB-per-test, coverage gates, service containers |
 | NVL-211 | **DEV deployment: build once, tag by SHA, deploy, smoke test** | AI+TM | 4 | rollback procedure documented and **rehearsed once** |
 | NVL-EXT-01 | **Start Razorpay merchant KYC** | ME | 2 | **Longest lead time in the programme — start now** |
-| NVL-EXT-02 | Register `neuvitechlabs.com`, configure Cloudflare | ME | 2 | Nameservers changed |
-| NVL-EXT-03 | Start email sending-domain verification | ME | 1 | SPF/DKIM records added |
+| NVL-EXT-02 | Start email sending-domain verification | ME | 1 | SPF/DKIM records added |
+| NVL-EXT-03 | Register `neuvitechlabs.com`, configure DNS + Cloudflare | ME | 2 | Nameservers changed |
 
 ---
 
