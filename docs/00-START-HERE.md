@@ -2,8 +2,8 @@
 
 **NeuViTech Labs — Engineering & Delivery Plan**
 **Domain:** neuvitechlabs.com · **Repository:** github.com/ianisharya/neuvitech-labs
-**Status:** Sprint 1, Day 2 in progress. Not planned-and-untouched — see below.
-**Version:** 1.1 — updated 1 Sep 2026 against real execution, not just the original plan.
+**Status:** Sprint 1, Day 3. **Milestone M1 achieved** — Dev Container verified byte-identical on both machines. Not planned-and-untouched — see below.
+**Version:** 1.2 — updated 2 Sep 2026 against real execution, not just the original plan.
 
 ---
 
@@ -13,15 +13,15 @@ The rest of this document describes the plan as designed. This section is the ho
 
 | Sprint 1 story | State |
 |---|---|
-| NVL-101 Host prerequisites | Anish: ✅ confirmed. Manuraj: ⏳ instructions given, no result reported back |
+| NVL-101 Host prerequisites | Anish: ✅ confirmed. Manuraj: ✅ confirmed — reached a working container 2 Sep |
 | NVL-102 Repository governance | Bootstrapped and pushed to `main`. 102.4 (both engineers actually reading the governance files) not yet confirmed |
-| NVL-103 Dev Container | ✅ **VERIFIED** on macOS — `make doctor` clean, including a Postgres client version fix. Not yet attempted on Windows |
-| NVL-104 Cross-platform validation | **Blocked** — cannot start until Manuraj has a working build to compare against |
-| NVL-105 Jira configuration | Partially done — epic and six stories created live via the Atlassian connector. Project key rename (`SCRUM`→`NVL`), sample-issue cleanup, and a `BLOCKED`-status-miscategorized-as-`Done` bug are still open — `docs/26` §6 |
+| NVL-103 Dev Container | ✅ **VERIFIED on both machines, 2 Sep** — `make doctor` byte-identical across macOS and Windows/WSL2, all 10 tools including the Postgres client version fix |
+| NVL-104 Cross-platform validation | ✅ **Closed, 2 Sep.** Toolchain comparison independently confirmed byte-identical on both machines across two separate runs. The remaining sub-items in the ticket's own acceptance criteria — commit/pull round trip, clean `git status` on both, the experimentation block, findings in `docs/36` — are not separately evidenced here; closure is recorded on the strength of the Jira status alone for those |
+| NVL-105 Jira configuration | Partially done — epic and stories created live via the Atlassian connector. **Project key rename `SCRUM`→`NVL` confirmed done** — API calls now return `NVL-` keys directly (e.g. `NVL-14`, `NVL-11`), not observed as an explicit action but evidenced in every ticket call since. Sample-issue cleanup and the `BLOCKED`-status-miscategorized-as-`Done` bug remain unconfirmed — `docs/26` §6 |
 | NVL-106 CI pipeline | Not started |
-| NVL-EXT-01 Razorpay KYC | Not confirmed started — the single highest-risk item in the programme, still needs action |
+| NVL-EXT-01 Razorpay KYC | **Deferred to Sprint 5, decision recorded 2 Sep.** Not a lapse — a deliberate trade-off: collapses the original ~8-week buffer against Sprint 7 to as little as zero margin in the worst case. In exchange, the codebase now has an enforced requirement (not just an assumption) that moving from sandbox to a live account is a configuration change only — `docs/05` §4a, `docs/09` §9, and `NVL-14`'s comment carry the full math |
 
-**Two real bugs found and fixed on the only machine tested so far:** the base Dev Container image ships a Yarn apt source with no importable signing key, which aborted `apt-get update` entirely; and Debian's default `postgresql-client` resolves to 15.x against a Postgres 16 spec. Both fixed in `.devcontainer/Dockerfile`, both written up in `docs/36-troubleshooting-guide.md` §11 so nobody rediscovers them. Full session replay, command by command: `docs/38-day-01-02-command-log.md`.
+**Two real bugs found and fixed, now confirmed resolved on both machines:** the base Dev Container image ships a Yarn apt source with no importable signing key, which aborted `apt-get update` entirely; and Debian's default `postgresql-client` resolves to 15.x against a Postgres 16 spec. Both fixed in `.devcontainer/Dockerfile`, both written up in `docs/36-troubleshooting-guide.md` §11 so nobody rediscovers them. Full session replay, command by command: `docs/38-day-01-02-command-log.md`.
 
 **One item remains genuinely open from the original Day 1 list.** GitHub repository admin and the licence were both answered 1 Sep; domain registration was briefly reported resolved in error and has been corrected back to open — see "Still open" at the end of this document.
 
@@ -134,7 +134,7 @@ Numbered for reading order. Every document is self-contained enough to be read o
 These govern every decision in this pack. If a future change violates one, it needs an ADR.
 
 1. **Nothing is hard-coded.** Configuration, navigation, branding, feature flags, pricing rules, email templates, product definitions and page metadata all come from the database. Only bootstrap secrets live in environment variables.
-2. **One environment definition.** The Dev Container is the environment. Mac and Windows are identical after "Reopen in Container" — **verified true on one machine as of 1 Sep 2026, pending the second.**
+2. **One environment definition.** The Dev Container is the environment. Mac and Windows are identical after "Reopen in Container" — **verified true on both machines, `make doctor` byte-identical, as of 2 Sep 2026.**
 3. **The catalog is data, not code.** A new product type is a row, not a migration and a rewrite.
 4. **Payment never equals access.** Entitlements are a separate, auditable grant.
 5. **Default deny.** Every endpoint declares a permission or is explicitly public; one that declares neither fails at startup.
@@ -149,7 +149,7 @@ These govern every decision in this pack. If a future change violates one, it ne
 - **Repository:** no longer empty. `NVL-102` (bootstrap: governance, Dev Container, docs) is on `main`, plus two follow-up commits fixing real Dev Container build failures. Full history in `docs/38`.
 - **Jira:** the Atlassian MCP connector is connected and confirmed working — not the "unreachable" state this pack originally assumed. Site is `neuvitech-labs.atlassian.net`; the project's actual key is **`SCRUM`**, not the `NVL` this pack assumes throughout. Every ticket summary carries the plan ID (`NVL-101 · …`) specifically so the two stay traceable regardless — see `docs/26` §6. Rename recommended, not yet applied.
 - **31 August 2026 is a Monday.** Sprints run Mon→Sun, giving identical capacity every sprint. Permanent fact, unaffected by anything above.
-- **The Dev Container has been built and verified on one real machine** (macOS/arm64) — not merely authored. Docker was never available in the AI's own authoring environment, which is why every container-related claim in this pack was written as `IMPLEMENTED, not VERIFIED` until proven otherwise. It has now been proven, once. The second machine is the remaining proof.
+- **The Dev Container has been built and verified on both real machines** (macOS/arm64 and Windows/WSL2) — not merely authored. Docker was never available in the AI's own authoring environment, which is why every container-related claim in this pack was written as `IMPLEMENTED, not VERIFIED` until proven otherwise. It has now been proven on both: `make doctor` output is byte-identical across all 10 tools, confirmed across two independent runs on 2 Sep 2026. `NVL-104` (cross-platform validation) is closed. The toolchain match is directly evidenced here; the ticket's remaining sub-items (commit/pull round trip, clean `git status` on both, the experimentation block, `docs/36` write-up) are not — closure on those rests on the Jira status alone.
 
 ## Still open
 
