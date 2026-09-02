@@ -105,6 +105,21 @@ setting_audit                 -- append-only history
 | `observability` | Sample rates, log level per module, alert thresholds |
 | `ui` | Homepage section order, hero variant, cards per row, whether to show trust badges |
 
+## 4a. Worked example: payment credentials, and why going live is never a deploy
+
+This is the concrete case the abstract "provider keys (secret)" row above is standing in for. Written up explicitly because it is the first place a real business consequence — sandbox development now, a live merchant account later — depends on this architecture actually working as designed, not just being described as working.
+
+```
+payments.active_provider          → "razorpay"                          (string, not secret)
+payments.razorpay_key_id          → "rzp_test_XXXXXXXXXXXX"              (secret)
+payments.razorpay_key_secret      → "••••••••••••••••"                  (secret)
+payments.razorpay_webhook_secret  → "••••••••••••••••"                  (secret)
+```
+
+The `PaymentProvider` protocol implementation for Razorpay (`docs/09` §6) reads these four keys and nothing else. It has no branch, flag, or code path that distinguishes a Razorpay test key from a Razorpay live key — Razorpay's own key prefix (`rzp_test_…` vs `rzp_live_…`) is the only thing that differs, and that difference lives entirely inside the value, never in code that inspects it.
+
+**Consequence:** the path from "developing against sandbox because KYC hasn't cleared yet" to "processing real payments" is four settings values changed through the admin UI. No code change, no pull request, no deploy, no restart. `is_secret = true` means the change is encrypted at rest and never appears in a diff, a log, or an API response — which is also exactly why it can't be reviewed by reading a PR, and why `docs/09` §9's test matrix includes an explicit test asserting this rather than leaving it as an assumption nobody checks.
+
 ## 5. Content and navigation are data too
 
 Settings cover scalars. Structured content gets its own tables.
