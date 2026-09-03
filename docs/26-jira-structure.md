@@ -136,7 +136,7 @@ Also: `Bug`, `Spike` (time-boxed investigation — Sprint 6 payment provider, Sp
 | # | Item | Why it matters |
 |---|---|---|
 | 1 | **Change project key `SCRUM` → `NVL`** | Every document, both CSVs, the guardrail script and the commit convention reference `NVL-`. Team-managed projects rename all issue keys automatically and keep redirects |
-| 2 | **Fix `BLOCKED` status category** | Currently categorised **Done** (green). A blocked issue counts as completed in burndown and velocity. Either recategorise to To Do, or delete it in favour of ON HOLD |
+| ~~2~~ | ~~Fix `BLOCKED` status category~~ | **Resolved, confirmed 3 Sep 2026.** No status literally named `BLOCKED` remains in the live workflow — checked directly via API on two separate tickets. `ON HOLD` (To Do category) now covers pause semantics; `Cancelled` (Done category) covers abandonment. Both correctly categorised |
 | 3 | Delete `SCRUM-4`, `SCRUM-5` | Jira onboarding samples |
 | 4 | Create Sprint 1: 31 Aug – 13 Sep 2026 | |
 | 5 | Custom fields | `Owner Type` · `AI Effort (h)` · `Human Effort (h)` · `Waiting Time (h)` · `Security Impact` · `Requires Migration` · `Sprint Day` |
