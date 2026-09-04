@@ -1,35 +1,35 @@
-# 04 — System Architecture
+# 04: System Architecture
 
 ## 1. Style: modular monolith
 
 One deployable API composed of strictly bounded modules, one presentation app, one worker process sharing the same codebase and image.
 
-**Why not microservices:** the core aggregates (`catalog → product → order → entitlement → enrolment`) are *transactionally coupled*. Splitting them replaces local ACID transactions with distributed sagas and compensating actions — a hard problem for an expert team and an unreasonable one at 49 team-hours a week. Microservices solve an *organisational* problem (many teams, independent deploys) that we do not have. Full reasoning in ADR-0001.
+**Why not microservices:** the core aggregates (`catalog → product → order → entitlement → enrolment`) are *transactionally coupled*. Splitting them replaces local ACID transactions with distributed sagas and compensating actions, a hard problem for an expert team and an unreasonable one at 49 team-hours a week. Microservices solve an *organisational* problem (many teams, independent deploys) that we do not have. Full reasoning in ADR-0001.
 
 **The one process boundary we accept:**
 
 ```
-                          Browser
-                             │
-                    ┌────────▼────────┐
-                    │  Next.js 15     │  SSR · SEO · BFF
-                    │  ZERO business  │  session cookie only
-                    │  logic          │
-                    └────────┬────────┘
-                             │ private network, server-to-server
-                    ┌────────▼────────┐
-                    │   FastAPI       │  SYSTEM OF RECORD
-                    │   all domain    │  all rules, all authorization
-                    │   logic         │
-                    └────────┬────────┘
-          ┌──────────┬───────┼────────┬──────────────┐
-          ▼          ▼       ▼        ▼              ▼
-     PostgreSQL   Redis   Object   External      ARQ Worker
-     + pgvector           Storage  Providers    (same image,
-     (system of   cache,  (private  payments,    same domain
-      record)     queue,  media)    email,       code)
-                  limits            meetings,
-                                    LLM
+ Browser
+ │
+ ┌────────▼────────┐
+ │ Next.js 15 │ SSR · SEO · BFF
+ │ ZERO business │ session cookie only
+ │ logic │
+ └────────┬────────┘
+ │ private network, server-to-server
+ ┌────────▼────────┐
+ │ FastAPI │ SYSTEM OF RECORD
+ │ all domain │ all rules, all authorization
+ │ logic │
+ └────────┬────────┘
+ ┌──────────┬───────┼────────┬──────────────┐
+ ▼ ▼ ▼ ▼ ▼
+ PostgreSQL Redis Object External ARQ Worker
+ + pgvector Storage Providers (same image,
+ (system of cache, (private payments, same domain
+ record) queue, media) email, code)
+ limits meetings,
+ LLM
 ```
 
 Next.js holds **no business rules**. If a rule can be enforced client-side it must *also* be enforced in FastAPI, and FastAPI is authoritative.
@@ -38,25 +38,25 @@ Next.js holds **no business rules**. If a rule can be enforced client-side it mu
 
 ```
 modules/
-├── identity/      users, sessions, MFA, roles, permissions, audit
-├── settings/      runtime configuration, feature flags, content, navigation
-├── catalog/       type registry, catalog items, versions, relationships, publishing
-├── learning/      courses, modules, lessons, progress, resources
-├── live/          cohorts, sessions, meeting provider, attendance, recordings
-├── assessment/    quizzes, exams, projects, submissions, grading
-├── credential/    certificates: eligibility, issuance, verification, revocation
-├── document/      brochures: generation, versioning, access, analytics
-├── commerce/      products, prices, offers, coupons, checkout, orders
-├── payments/      provider adapters, webhooks, reconciliation, refunds
-├── entitlement/   entitlements and enrolments
-├── careers/       jobs, applications, screening
-├── community/     articles, events, showcases, profiles
-├── ai/            gateway, guardrails, agents, tools, evaluations
-├── analytics/     event ingest, aggregation, metrics
-└── admin/         administrative surfaces over every module
+├── identity/ users, sessions, MFA, roles, permissions, audit
+├── settings/ runtime configuration, feature flags, content, navigation
+├── catalog/ type registry, catalog items, versions, relationships, publishing
+├── learning/ courses, modules, lessons, progress, resources
+├── live/ cohorts, sessions, meeting provider, attendance, recordings
+├── assessment/ quizzes, exams, projects, submissions, grading
+├── credential/ certificates: eligibility, issuance, verification, revocation
+├── document/ brochures: generation, versioning, access, analytics
+├── commerce/ products, prices, offers, coupons, checkout, orders
+├── payments/ provider adapters, webhooks, reconciliation, refunds
+├── entitlement/ entitlements and enrolments
+├── careers/ jobs, applications, screening
+├── community/ articles, events, showcases, profiles
+├── ai/ gateway, guardrails, agents, tools, evaluations
+├── analytics/ event ingest, aggregation, metrics
+└── admin/ administrative surfaces over every module
 ```
 
-**Each module owns its tables, its service layer, and its public interface.** Cross-module access goes through the target module's service functions or published domain events — **never** by importing another module's ORM models or querying its tables. `import-linter` enforces this in CI.
+**Each module owns its tables, its service layer, and its public interface.** Cross-module access goes through the target module's service functions or published domain events, **never** by importing another module's ORM models or querying its tables. `import-linter` enforces this in CI.
 
 That rule is what makes the monolith *modular* rather than merely co-located, and it is what makes future service extraction a mechanical exercise rather than archaeology.
 
@@ -66,16 +66,16 @@ That rule is what makes the monolith *modular* rather than merely co-located, an
 Browser
  → CDN (public pages, stale-while-revalidate)
  → Next.js Server Component
-     ├ reads public settings (cached)
-     └ calls FastAPI with the session cookie
+ ├ reads public settings (cached)
+ └ calls FastAPI with the session cookie
  → FastAPI middleware chain
-     ├ request id assigned / propagated
-     ├ structured log entry opened
-     ├ OTel span started
-     ├ CORS + security headers
-     ├ rate limit (Redis token bucket)
-     ├ session resolution (opaque token → Redis → Postgres fallback)
-     └ authorization (single PDP — permission or explicitly @public)
+ ├ request id assigned / propagated
+ ├ structured log entry opened
+ ├ OTel span started
+ ├ CORS + security headers
+ ├ rate limit (Redis token bucket)
+ ├ session resolution (opaque token → Redis → Postgres fallback)
+ └ authorization (single PDP, permission or explicitly @public)
  → Router: validate (Pydantic) → delegate
  → Service: business rules, transaction boundary
  → Repository: parameterised queries, ownership filtered IN the query
@@ -89,15 +89,15 @@ Browser
 
 ```
 Service begins transaction
-  ├ mutate aggregate
-  ├ write audit_log row
-  └ write outbox_event row          ← same transaction
+ ├ mutate aggregate
+ ├ write audit_log row
+ └ write outbox_event row ← same transaction
 Commit
-  ↓
+ ↓
 Outbox relay (ARQ, polls every 2s)
-  ├ publish event
-  └ mark dispatched
-  ↓
+ ├ publish event
+ └ mark dispatched
+ ↓
 Subscribers: cache invalidation · brochure regeneration · notifications · analytics
 ```
 
@@ -128,21 +128,21 @@ Assumptions are labelled as mine and should be corrected once real traffic exist
 | Uncached DB RPS | remainder | ~400 |
 | Progress writes | 1 event / 3 min / active learner | ~250/s |
 | Catalog data | hundreds of items, thousands of lessons | < 10 GB |
-| Video | **dominant cost** — object storage + CDN, not Postgres | see doc 13 |
+| Video | **dominant cost**: object storage + CDN, not Postgres | see doc 13 |
 
-**Reading:** a single well-indexed Postgres primary with a read replica, behind Redis and a CDN, absorbs this comfortably. **The scaling problem for this product is video egress and cache hit ratio, not database throughput.** The architecture is optimised accordingly — which is why we are not building for sharding we will not need.
+**Reading:** a single well-indexed Postgres primary with a read replica, behind Redis and a CDN, absorbs this comfortably. **The scaling problem for this product is video egress and cache hit ratio, not database throughput.** The architecture is optimised accordingly, which is why we are not building for sharding we will not need.
 
-## 7. Evolution path — do not pre-build
+## 7. Evolution path: do not pre-build
 
 ```
 Modular monolith
-  → horizontal stateless replicas
-  → Redis + CDN tuning
-  → dedicated worker pool
-  → database read replica
-  → table partitioning for event streams
-  → selective service extraction
-  → Kubernetes only when replica count or multi-team ownership justifies it
+ → horizontal stateless replicas
+ → Redis + CDN tuning
+ → dedicated worker pool
+ → database read replica
+ → table partitioning for event streams
+ → selective service extraction
+ → Kubernetes only when replica count or multi-team ownership justifies it
 ```
 
 The application is written stateless and twelve-factor from day one, so each step is packaging, not rewriting.

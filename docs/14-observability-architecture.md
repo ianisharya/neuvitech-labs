@@ -1,4 +1,4 @@
-# 14 — Observability Architecture
+# 14: Observability Architecture
 
 **Observability is part of the product, not an afterthought.** It is built from Sprint 2 and validated by deliberately breaking things in Sprint 13. **It is not complete until it has been tested.**
 
@@ -22,10 +22,10 @@ Structured JSON, one line per event, always carrying `request_id`, `user_id` (wh
 
 ```python
 logger.info("order.placed", order_id=str(order.id), total_minor=order.total_minor,
-            currency=order.currency, user_id=str(user.id))
+ currency=order.currency, user_id=str(user.id))
 ```
 
-- **Event names are `noun.verb` and stable** — they are queried, so renaming one breaks dashboards.
+- **Event names are `noun.verb` and stable**: they are queried, so renaming one breaks dashboards.
 - **PII excluded by an allow-list serialiser**, never a blocklist. A blocklist fails silently the moment someone adds a field.
 - **Never logged:** passwords, tokens, card data, full request bodies on sensitive routes, prompt or completion text.
 - Levels: `DEBUG` local only · `INFO` business events · `WARNING` recoverable · `ERROR` needs attention · `CRITICAL` pages someone.
@@ -33,8 +33,8 @@ logger.info("order.placed", order_id=str(order.id), total_minor=order.total_mino
 
 ## 3. Metrics
 
-**RED per endpoint** — Rate, Errors, Duration (p50/p95/p99).
-**USE per resource** — Utilisation, Saturation, Errors: CPU, memory, DB connection pool, Redis memory, disk.
+**RED per endpoint**: Rate, Errors, Duration (p50/p95/p99).
+**USE per resource**: Utilisation, Saturation, Errors: CPU, memory, DB connection pool, Redis memory, disk.
 
 **Business metrics, which are the ones that actually matter:**
 `signups` · `checkout_started` · `checkout_completed` · `payment_success_rate` · `webhook_lag_seconds` · `webhook_backlog` · `entitlements_granted` · `enrolments_created` · `lessons_completed` · `certificates_issued` · `brochures_downloaded` · `ai_cost_per_day` · `video_cdn_hit_ratio` · `job_queue_depth` · `job_failure_rate`.
@@ -57,7 +57,7 @@ Sampling: 100% for errors and slow requests, configurable percentage otherwise, 
 
 `/health` must never query the database. A liveness probe that touches the database restarts healthy application containers during a database blip, turning a small incident into an outage.
 
-## 6. Alerts — symptom-based, each with a runbook
+## 6. Alerts: symptom-based, each with a runbook
 
 | Alert | Condition | Severity |
 |---|---|---|
@@ -91,7 +91,7 @@ Sampling: 100% for errors and slow requests, configurable percentage otherwise, 
 | **AI** | Invocations, tokens, cost, latency, guardrail events, refusals |
 | **Frontend** | Core Web Vitals, JS errors, slowest routes |
 
-## 8. Operational validation — Sprint 13, and this is the part people skip
+## 8. Operational validation: Sprint 13, and this is the part people skip
 
 **Observability is not complete when it is configured. It is complete when a deliberately broken system produces the expected alert, log, trace and dashboard change.**
 
@@ -112,7 +112,7 @@ The Sprint 13 exercise, executed by you:
 
 **Each of these is a Jira subtask with human execution time.** They are how we find out that an alert was misconfigured *before* it matters.
 
-## 9. Post-deployment observation — Sprint 14
+## 9. Post-deployment observation: Sprint 14
 
 Production is not "done" at deploy. A **72-hour observation window** with scheduled check-ins:
 

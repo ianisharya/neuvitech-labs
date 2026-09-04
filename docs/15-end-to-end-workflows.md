@@ -1,4 +1,4 @@
-# 15 — End-to-End Workflows
+# 15: End-to-End Workflows
 
 Each workflow: trigger → steps → authorization → data written → failure handling → audit.
 
@@ -8,7 +8,7 @@ Each workflow: trigger → steps → authorization → data written → failure 
 
 ## Program discovery
 `Homepage → Career → Track → Program → Specialization → Curriculum → Course`
-Served from the materialised read model behind CDN + ISR + Redis. **All hierarchy resolved from `catalog_relationship`** — no hardcoded structure anywhere in the frontend. Emits `{kind}_viewed`.
+Served from the materialised read model behind CDN + ISR + Redis. **All hierarchy resolved from `catalog_relationship`**: no hardcoded structure anywhere in the frontend. Emits `{kind}_viewed`.
 
 ## Purchase
 `Product → server-side price resolution → coupon validation → checkout session → order → payment → webhook verification → entitlement → enrolment → receipt`
@@ -20,7 +20,7 @@ Same code path as paid, payment skipped by server-side policy. Assessment thresh
 
 ## Subscription
 `Plan → checkout → payment → subscription → entitlement (valid_until = period_end + grace) → renewal`
-Renewal failure → retry with backoff → `PAST_DUE` → `GRACE` → suspension. **Progress and submissions retained through suspension** — learner data outlives billing state.
+Renewal failure → retry with backoff → `PAST_DUE` → `GRACE` → suspension. **Progress and submissions retained through suspension**: learner data outlives billing state.
 
 ## Learning
 `Enrolment → Program → Specialization → Course → Module → Lesson → progress → assignment → project → assessment → completion → certificate`
@@ -28,7 +28,7 @@ Progress events batched client-side, flushed every 15 s, written asynchronously.
 
 ## Masterclass
 `Discovery → detail → registration → payment if required → entitlement → enrolment → session → attendance → recording → assessment → certificate if eligible`
-Capacity enforced with a row lock; overflow to waitlist. **Per-user meeting links — never a shared hardcoded URL.**
+Capacity enforced with a row lock; overflow to waitlist. **Per-user meeting links, never a shared hardcoded URL.**
 
 ## Live learning
 `Cohort → session → MeetingProvider (Zoom) → attendance → recording → resources → LMS`

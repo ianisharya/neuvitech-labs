@@ -1,4 +1,4 @@
-# ADR-0004 — Next.js 15 as Presentation/BFF, Holding No Business Logic
+# ADR-0004: Next.js 15 as Presentation/BFF, Holding No Business Logic
 
 **Status:** Accepted · **Date:** 2026-08-30
 
@@ -11,10 +11,10 @@ Next.js 15 (App Router) + TypeScript strict as presentation and BFF only. It ren
 Implementation is deliberately conservative given the team's skill profile: **React Server Components by default**, shadcn/ui vendored for accessible primitives, **no client-state library**, Tailwind utilities only.
 
 ## Alternatives Considered
-**Next.js fullstack with logic in route handlers** — rejected. Splits the domain across two languages: the worst outcome.
-**Pure SPA (Vite + React)** — rejected. Forfeits SEO, an explicit requirement.
-**Server-rendered Jinja templates from FastAPI** — genuinely considered, since it keeps the team in one language. Rejected because the learning player, checkout and admin console need real interactivity, and htmx-style approaches would fight us there. Server Components give us most of the "return HTML" simplicity anyway.
-**Astro** — excellent for the content half, weaker for the authenticated app half.
+**Next.js fullstack with logic in route handlers**: rejected. Splits the domain across two languages: the worst outcome.
+**Pure SPA (Vite + React)**: rejected. Forfeits SEO, an explicit requirement.
+**Server-rendered Jinja templates from FastAPI**: genuinely considered, since it keeps the team in one language. Rejected because the learning player, checkout and admin console need real interactivity, and htmx-style approaches would fight us there. Server Components give us most of the "return HTML" simplicity anyway.
+**Astro**: excellent for the content half, weaker for the authenticated app half.
 
 ## Consequences
 **Positive:** SSR/ISR for SEO · RSC keeps catalog pages near-zero-JS, which directly serves the Core Web Vitals budgets · one clear boundary between the two tracks · generated types catch cross-track breakage at compile time.
@@ -24,7 +24,7 @@ Implementation is deliberately conservative given the team's skill profile: **Re
 Free and open source.
 
 ## Security
-No business logic in the browser-facing layer. Session cookie is `httpOnly`/`Secure`/`SameSite=Lax`; the browser never holds a token it could leak. **Risk: caching an authenticated response is a cross-user data leak** — treated as a security issue in the troubleshooting guide, not a performance note.
+No business logic in the browser-facing layer. Session cookie is `httpOnly`/`Secure`/`SameSite=Lax`; the browser never holds a token it could leak. **Risk: caching an authenticated response is a cross-user data leak**: treated as a security issue in the troubleshooting guide, not a performance note.
 
 ## Scalability
 Stateless, horizontally scalable. ISR and CDN absorb the ~85% cacheable catalog traffic.

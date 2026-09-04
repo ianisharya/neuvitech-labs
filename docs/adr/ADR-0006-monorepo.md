@@ -1,4 +1,4 @@
-# ADR-0006 — Single-Repository Monorepo with Enforced Module Boundaries
+# ADR-0006: Single-Repository Monorepo with Enforced Module Boundaries
 
 **Status:** Accepted · **Date:** 2026-08-30
 
@@ -9,8 +9,8 @@ Two applications (FastAPI API, Next.js web), shared API contracts, infrastructur
 One repository: `apps/api`, `apps/web`, `packages/contracts`, `infrastructure/`, `docs/`, `scripts/`. Backend module boundaries enforced by `import-linter`; the API contract enforced by generated types with a CI drift check.
 
 ## Alternatives Considered
-**Separate repositories per app** — rejected. A cross-cutting change (add an API field, consume it in the UI) becomes two PRs in two repos with a coordination problem between them. With two people on two tracks that friction is paid several times a week.
-**Monorepo tooling (Nx, Turborepo)** — rejected as premature. Two apps do not need a build orchestrator; `make` and path-filtered CI jobs suffice and are one less thing to learn.
+**Separate repositories per app**: rejected. A cross-cutting change (add an API field, consume it in the UI) becomes two PRs in two repos with a coordination problem between them. With two people on two tracks that friction is paid several times a week.
+**Monorepo tooling (Nx, Turborepo)**: rejected as premature. Two apps do not need a build orchestrator; `make` and path-filtered CI jobs suffice and are one less thing to learn.
 
 ## Consequences
 **Positive:** atomic cross-stack changes in one PR · one source of truth for the API contract · shared CI, docs and tooling · **documentation changes in the same PR as the code it describes, so it does not drift** · a new contributor clones one thing.
@@ -20,7 +20,7 @@ One repository: `apps/api`, `apps/web`, `packages/contracts`, `infrastructure/`,
 Free.
 
 ## Security
-One place to scan for secrets; Gitleaks covers everything. CODEOWNERS protects `migrations/`, `security/`, `payments/`, `.github/`, `infrastructure/`. Risk: anyone with access sees everything — acceptable at two people; revisit if contractors are added.
+One place to scan for secrets; Gitleaks covers everything. CODEOWNERS protects `migrations/`, `security/`, `payments/`, `.github/`, `infrastructure/`. Risk: anyone with access sees everything, acceptable at two people; revisit if contractors are added.
 
 ## Scalability
 Fine to tens of thousands of files. Path-filtered CI keeps runtimes low.

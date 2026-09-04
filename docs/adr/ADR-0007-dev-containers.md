@@ -1,4 +1,4 @@
-# ADR-0007 — VS Code Dev Containers as the Cross-Platform Contract
+# ADR-0007: VS Code Dev Containers as the Cross-Platform Contract
 
 **Status:** Accepted · **Date:** 2026-08-30
 
@@ -10,13 +10,13 @@ Both engineers develop inside an identical Linux container defined by `.devconta
 
 ## Alternatives Considered
 
-**Native installs on both OSes with Docker only for services** — the common approach. Rejected: it leaves Python and Node version drift, PATH configuration, shell differences, line endings, and Windows C-extension compilation. Each is individually small and collectively a recurring tax over 280 days, and every one of them produces confusing errors for non-expert engineers.
+**Native installs on both OSes with Docker only for services**: the common approach. Rejected: it leaves Python and Node version drift, PATH configuration, shell differences, line endings, and Windows C-extension compilation. Each is individually small and collectively a recurring tax over 280 days, and every one of them produces confusing errors for non-expert engineers.
 
-**WSL2 on Windows + native on macOS, no container** — closer, but still two different Linux/macOS userlands with different package managers and library versions. Solves the shell problem, not the version-drift problem.
+**WSL2 on Windows + native on macOS, no container**: closer, but still two different Linux/macOS userlands with different package managers and library versions. Solves the shell problem, not the version-drift problem.
 
-**Cloud development environments (Codespaces, Gitpod)** — excellent parity, but a recurring cost, dependent on connectivity, and slower for interactive work. Revisit if a third engineer joins and setup time becomes a bottleneck.
+**Cloud development environments (Codespaces, Gitpod)**: excellent parity, but a recurring cost, dependent on connectivity, and slower for interactive work. Revisit if a third engineer joins and setup time becomes a bottleneck.
 
-**Nix / devbox** — genuinely reproducible, but a steep learning curve for two non-expert engineers and a smaller community to search when stuck.
+**Nix / devbox**: genuinely reproducible, but a steep learning curve for two non-expert engineers and a smaller community to search when stuck.
 
 ## Consequences
 **Positive:** byte-identical toolchains · one set of commands after "Reopen in Container" · the environment is versioned with the code, so a dependency change is a reviewed PR · a new engineer is productive in under an hour · **eliminates an entire category of bug reports**.
@@ -30,10 +30,10 @@ We pay a one-off 25-minute build and a persistent ~2 GB of RAM to remove OS-diff
 Free. Docker Desktop is free for our use; VS Code and the extension are free.
 
 ## Security
-The container runs as a non-root user. Secrets stay in `.env` on the host, mounted, and git-ignored. The container has no production credentials. Minor risk: a compromised base image — mitigated by pinning the digest and Trivy-scanning it in CI.
+The container runs as a non-root user. Secrets stay in `.env` on the host, mounted, and git-ignored. The container has no production credentials. Minor risk: a compromised base image, mitigated by pinning the digest and Trivy-scanning it in CI.
 
 ## Scalability
-Scales to more engineers at zero marginal cost — the definition is already in the repository.
+Scales to more engineers at zero marginal cost, the definition is already in the repository.
 
 ## Migration Path
 If we ever abandon Dev Containers, the Dockerfile documents exactly what a native install must provide. Nothing is locked in.

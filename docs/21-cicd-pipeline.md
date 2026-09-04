@@ -1,29 +1,29 @@
-# 21 — CI/CD Pipeline
+# 21: CI/CD Pipeline
 
 ## 1. The pipeline
 
 ```
 Commit / PR
-  → Lint (Ruff, ESLint, Prettier)
-  → Typecheck (mypy --strict, tsc --noEmit)
-  → Unit tests + coverage gate
-  → Integration tests (Postgres + Redis service containers)
-  → Migration up AND down test
-  → Contract tests (Schemathesis vs generated OpenAPI)
-  → Generated-types drift check
-  → Build ONE image, tag with commit SHA
-  → Security scans (Semgrep, Gitleaks, Trivy, Checkov, pip-audit, npm audit)
-  → E2E smoke (Playwright)
-  ─────────────────────────── merge to main ───────────────────────────
-  → Deploy that image to DEV
-  → Run migrations
-  → Smoke test
-  → [manual] Promote SAME image to QA
-  → Regression suite + DAST (ZAP baseline)
-  → UAT sign-off
-  → [manual + required reviewer] Promote SAME image to PROD
-  → Migrate (expand phase) → canary → health check → full rollout
-  → Production smoke tests → 30-minute watch → record release
+ → Lint (Ruff, ESLint, Prettier)
+ → Typecheck (mypy --strict, tsc --noEmit)
+ → Unit tests + coverage gate
+ → Integration tests (Postgres + Redis service containers)
+ → Migration up AND down test
+ → Contract tests (Schemathesis vs generated OpenAPI)
+ → Generated-types drift check
+ → Build ONE image, tag with commit SHA
+ → Security scans (Semgrep, Gitleaks, Trivy, Checkov, pip-audit, npm audit)
+ → E2E smoke (Playwright)
+ ─────────────────────────── merge to main ───────────────────────────
+ → Deploy that image to DEV
+ → Run migrations
+ → Smoke test
+ → [manual] Promote SAME image to QA
+ → Regression suite + DAST (ZAP baseline)
+ → UAT sign-off
+ → [manual + required reviewer] Promote SAME image to PROD
+ → Migrate (expand phase) → canary → health check → full rollout
+ → Production smoke tests → 30-minute watch → record release
 ```
 
 **One image, built once, promoted unchanged.** Rebuilding per environment means you never tested what you shipped.
@@ -42,7 +42,7 @@ Plus: PR required · ≥1 approval from the other track · conversation resoluti
 | QA | Manual promotion | DEV smoke green | GitHub Env `qa` |
 | PROD | Manual promotion | UAT signed off + **required reviewer** | GitHub Env `production` |
 
-A DEV workflow **physically cannot read production secrets** — that is what GitHub Environments enforce, and it is why we use them rather than repository-level secrets.
+A DEV workflow **physically cannot read production secrets**: that is what GitHub Environments enforce, and it is why we use them rather than repository-level secrets.
 
 ## 4. Migration safety in the pipeline
 
@@ -58,12 +58,12 @@ A DEV workflow **physically cannot read production secrets** — that is what Gi
 | Bad application code | Redeploy previous image tag | **< 5 min** |
 | Bad migration (reversible) | Down-migration + previous image | 10–20 min |
 | Bad migration (irreversible) | PITR restore per runbook | 30–60 min |
-| Bad configuration | **Toggle the setting in admin** — no deploy | **< 1 min** |
-| Bad feature | **Turn the feature flag off** — no deploy | **< 1 min** |
+| Bad configuration | **Toggle the setting in admin**: no deploy | **< 1 min** |
+| Bad feature | **Turn the feature flag off**: no deploy | **< 1 min** |
 
 **Two of the five fastest recovery paths require no deployment at all.** That is the operational payoff of the database-driven configuration and feature-flag decisions in doc 05.
 
-## 6. Pipeline validation — Sprint 12
+## 6. Pipeline validation: Sprint 12
 
 The pipeline is not "configured and moved on from". It is tested end to end:
 

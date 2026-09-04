@@ -1,4 +1,4 @@
-# 30 — Critical Path & Dependencies
+# 30: Critical Path & Dependencies
 
 ## 1. The critical path
 
@@ -6,21 +6,21 @@ These determine the launch date. A day lost here is a day lost overall.
 
 ```
 NVL-101 Host prerequisites (S1)
-   └→ NVL-103 Dev Container (S1)        ← EVERYTHING depends on this
-        └→ NVL-202 Compose services (S2)
-             └→ NVL-204/205 Data layer + migrations (S2)
-                  └→ NVL-206 Settings from database (S2)
-                       └→ NVL-E03 Identity & authorization (S3)
-                            └→ NVL-E06 Catalog core (S5)
-                                 └→ NVL-E08 Public catalog (S6)
-                                      └→ NVL-E09 Commerce & payments (S7)
-                                           └→ NVL-E10 LMS (S8)
-                                                └→ NVL-E11 Assessments (S9)
-                                                     └→ NVL-E12 Certificates (S10)
-                                                          └→ NVL-E14 Cloud infra (S11)
-                                                               └→ NVL-E14 Pipeline to PROD (S12)
-                                                                    └→ NVL-E16 Hardening (S13)
-                                                                         └→ NVL-E17 LAUNCH (S14)
+ └→ NVL-103 Dev Container (S1) ← EVERYTHING depends on this
+ └→ NVL-202 Compose services (S2)
+ └→ NVL-204/205 Data layer + migrations (S2)
+ └→ NVL-206 Settings from database (S2)
+ └→ NVL-E03 Identity & authorization (S3)
+ └→ NVL-E06 Catalog core (S5)
+ └→ NVL-E08 Public catalog (S6)
+ └→ NVL-E09 Commerce & payments (S7)
+ └→ NVL-E10 LMS (S8)
+ └→ NVL-E11 Assessments (S9)
+ └→ NVL-E12 Certificates (S10)
+ └→ NVL-E14 Cloud infra (S11)
+ └→ NVL-E14 Pipeline to PROD (S12)
+ └→ NVL-E16 Hardening (S13)
+ └→ NVL-E17 LAUNCH (S14)
 ```
 
 ### Why each is on the path
@@ -37,7 +37,7 @@ NVL-101 Host prerequisites (S1)
 | **NVL-E14 Cloud infra** | Cannot deploy to what does not exist. Provisioned three sprints before launch so failures surface with time to fix |
 | **NVL-E16 Hardening** | Launching without validated alerts means discovering in production that monitoring never worked |
 
-## 2. Off the critical path — genuine float
+## 2. Off the critical path: genuine float
 
 | Work | Float | Can slip to |
 |---|---|---|
@@ -50,7 +50,7 @@ NVL-101 Host prerequisites (S1)
 | Masterclasses/Zoom (S11) | 1 sprint | S12 |
 | Subscriptions (S11) | 2 sprints | S15 |
 
-**If the schedule slips, cut from this list — never from identity, catalog, commerce, hardening or launch.**
+**If the schedule slips, cut from this list, never from identity, catalog, commerce, hardening or launch.**
 
 ## 3. Genuinely parallel work
 
@@ -76,7 +76,7 @@ NVL-101 Host prerequisites (S1)
 | Alerts configured → failure injection | Cannot validate what is not configured |
 | Deploy → observation window | Cannot observe what is not running |
 
-## 5. External dependencies — calendar, not effort
+## 5. External dependencies: calendar, not effort
 
 **These are the most dangerous items in the plan** because no amount of effort accelerates them.
 
@@ -90,20 +90,20 @@ NVL-101 Host prerequisites (S1)
 | NVL-EXT-06 | Zoom account + API app | 1–3 days | S11 | S9 | ~4 weeks |
 | NVL-EXT-07 | LLM provider key | Immediate | S18 | S17 | ~2 weeks |
 
-**NVL-EXT-01 is the highest-risk item in the entire programme.** Merchant KYC is outside your control and routinely takes four weeks. It is started in Sprint 2 — five sprints early — precisely so a delay consumes slack rather than the launch date.
+**NVL-EXT-01 is the highest-risk item in the entire programme.** Merchant KYC is outside your control and routinely takes four weeks. It is started in Sprint 2, five sprints early, precisely so a delay consumes slack rather than the launch date.
 
 ## 6. Bottlenecks
 
 | Bottleneck | Mitigation |
 |---|---|
-| **Human review capacity** — the fundamental constraint | Two parallel tracks; each reviews the other; estimates built on measured review rates |
-| **Sprint 7 payments** — highest complexity, external dependency, money | 36 pts not 42; spike first; three weekend sessions on it; ×2.0 multiplier |
-| **Sprint 11 first cloud provisioning** — new tooling, account-specific | You write the IaC; three sprints before launch |
-| **Sprint 13 failure injection** — may reveal alerts never worked | Full sprint allocated; findings feed Sprint 14 |
-| **Single-track knowledge** — bus factor with two people | **Track swap at Sprint 10** |
-| **Video CDN cost** — scales with success | Cost dashboard from Sprint 8; cache-hit ratio tracked |
+| **Human review capacity**: the fundamental constraint | Two parallel tracks; each reviews the other; estimates built on measured review rates |
+| **Sprint 7 payments**: highest complexity, external dependency, money | 36 pts not 42; spike first; three weekend sessions on it; ×2.0 multiplier |
+| **Sprint 11 first cloud provisioning**: new tooling, account-specific | You write the IaC; three sprints before launch |
+| **Sprint 13 failure injection**: may reveal alerts never worked | Full sprint allocated; findings feed Sprint 14 |
+| **Single-track knowledge**: bus factor with two people | **Track swap at Sprint 10** |
+| **Video CDN cost**: scales with success | Cost dashboard from Sprint 8; cache-hit ratio tracked |
 
-## 7. Highest-risk tasks — extra buffer allocated
+## 7. Highest-risk tasks: extra buffer allocated
 
 | Task | Sprint | Risk | Buffer |
 |---|---|---|---|

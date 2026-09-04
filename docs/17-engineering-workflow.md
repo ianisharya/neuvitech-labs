@@ -1,4 +1,4 @@
-# 17 — Engineering Workflow
+# 17: Engineering Workflow
 
 The lifecycle of every feature, from idea to production.
 
@@ -6,7 +6,7 @@ The lifecycle of every feature, from idea to production.
 
 ```
 UNDERSTAND → DESIGN → IMPLEMENT → ANALYSE → EXPERIMENT → TEST
-   → REVIEW → MODIFY → INTEGRATE → VALIDATE → DEPLOY → OBSERVE → HARDEN → RELEASE
+ → REVIEW → MODIFY → INTEGRATE → VALIDATE → DEPLOY → OBSERVE → HARDEN → RELEASE
 ```
 
 Not every feature needs every stage at full depth. A copy change skips experimentation; a payment integration gets all of it twice.
@@ -34,9 +34,9 @@ Not every feature needs every stage at full depth. A copy change skips experimen
 
 **Database schema change:** Design → **human reviews the migration before it runs anywhere** → implement → test upgrade AND downgrade → apply locally → verify → PR → CI runs both directions → merge → DEV → verify → QA → PROD (expand phase) → later release (contract phase).
 
-**External integration (payments, Zoom, LLM):** **Spike first** — human tests the real API and documents actual behaviour, which routinely differs from the docs → design against observed behaviour → implement with the provider protocol → test against sandbox → **failure-mode testing (timeouts, malformed responses, outages)** → integrate → validate → deploy → observe closely. Rework multiplier **×2.0** applies here.
+**External integration (payments, Zoom, LLM):** **Spike first**: human tests the real API and documents actual behaviour, which routinely differs from the docs → design against observed behaviour → implement with the provider protocol → test against sandbox → **failure-mode testing (timeouts, malformed responses, outages)** → integrate → validate → deploy → observe closely. Rework multiplier **×2.0** applies here.
 
-**Frontend feature:** Design (states first — including empty and error) → implement → **human checks keyboard navigation, screen reader, mobile at 320px, dark mode** → axe → visual regression → Lighthouse → review → merge.
+**Frontend feature:** Design (states first, including empty and error) → implement → **human checks keyboard navigation, screen reader, mobile at 320px, dark mode** → axe → visual regression → Lighthouse → review → merge.
 
 **Infrastructure change:** Design → **human writes or heavily modifies the IaC** (account-specific) → plan → review the plan output → apply to DEV → verify → apply to QA → verify → apply to PROD → observe.
 
@@ -54,14 +54,14 @@ Not every feature needs every stage at full depth. A copy change skips experimen
 
 ## 5. Definition of Done (before a ticket closes)
 
-**Implementation** — acceptance criteria demonstrated, not asserted · standards followed · no TODO without a ticket · errors handled.
-**Tests** — unit, integration where data is involved, failure paths, coverage gate met, **passing in CI**.
-**Security** — authorization enforced, input validated, ownership filtered in the query, no secrets, Gitleaks clean.
-**Data** — migration reversible and tested both directions, indexes considered.
-**Human validation** — code reviewed by the other track, **run and manually verified**, exploratory testing where user-facing.
-**Observability** — logs emitted, metrics exposed, alert added if it can fail in production, runbook written.
-**Documentation** — API, schema, `.env.example`, ADR if architectural.
-**Tracking** — Jira transitioned, commits carry the key, PR links the issue.
+**Implementation**: acceptance criteria demonstrated, not asserted · standards followed · no TODO without a ticket · errors handled.
+**Tests**: unit, integration where data is involved, failure paths, coverage gate met, **passing in CI**.
+**Security**: authorization enforced, input validated, ownership filtered in the query, no secrets, Gitleaks clean.
+**Data**: migration reversible and tested both directions, indexes considered.
+**Human validation**: code reviewed by the other track, **run and manually verified**, exploratory testing where user-facing.
+**Observability**: logs emitted, metrics exposed, alert added if it can fail in production, runbook written.
+**Documentation**: API, schema, `.env.example`, ADR if architectural.
+**Tracking**: Jira transitioned, commits carry the key, PR links the issue.
 
 ## 6. Higher bar for high-consequence work
 

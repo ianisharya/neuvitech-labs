@@ -1,4 +1,4 @@
-# ADR-0003 — PostgreSQL 16 as the Single System of Record
+# ADR-0003: PostgreSQL 16 as the Single System of Record
 
 **Status:** Accepted · **Date:** 2026-08-30
 
@@ -9,14 +9,14 @@ The platform needs transactional commerce, a richly relational catalog, flexible
 PostgreSQL 16 as the single system of record, with `pgvector`. No second database in v1.
 
 ## Alternatives Considered
-**+ Neo4j** — deferred. Skill graphs, prerequisites and career mapping are served by a `skill_edge` table and recursive CTEs at our data volume. Neo4j adds a second stateful system to secure, back up, monitor and learn.
-**+ MongoDB** — deferred. JSONB covers flexible documents with SQL query power *and* transactional integrity.
-**+ Elasticsearch** — deferred. Postgres FTS is sufficient for a catalog of hundreds of items.
-**+ dedicated vector DB** — deferred. `pgvector` keeps embeddings inside the existing access-control and backup boundary, which is **how we enforce retrieval ACLs**, not an incidental convenience.
-**MySQL** — rejected. Weaker JSONB, no native vector extension, weaker full-text.
+**+ Neo4j**: deferred. Skill graphs, prerequisites and career mapping are served by a `skill_edge` table and recursive CTEs at our data volume. Neo4j adds a second stateful system to secure, back up, monitor and learn.
+**+ MongoDB**: deferred. JSONB covers flexible documents with SQL query power *and* transactional integrity.
+**+ Elasticsearch**: deferred. Postgres FTS is sufficient for a catalog of hundreds of items.
+**+ dedicated vector DB**: deferred. `pgvector` keeps embeddings inside the existing access-control and backup boundary, which is **how we enforce retrieval ACLs**, not an incidental convenience.
+**MySQL**: rejected. Weaker JSONB, no native vector extension, weaker full-text.
 
 ## Consequences
-**Positive:** one engine to learn, secure, back up and monitor — significant for a two-person team · ACID across the commerce chain · JSONB enables both the settings system and the catalog type registry without EAV · one backup covers everything.
+**Positive:** one engine to learn, secure, back up and monitor, significant for a two-person team · ACID across the commerce chain · JSONB enables both the settings system and the catalog type registry without EAV · one backup covers everything.
 **Negative:** deep graph traversal is less expressive than Cypher · very high-volume event ingestion will eventually need partitioning or extraction · one system means one blast radius.
 
 ## Cost
