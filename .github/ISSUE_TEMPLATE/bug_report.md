@@ -6,26 +6,25 @@ labels: bug
 
 ## What happened
 
-**Ticket:**
-**Command / action:**
-**Machine:** macOS / Windows (WSL2) / CI / DEV / QA / PROD
+Ticket, if there is one:
+Command or action that triggered it:
+Machine: macOS, Windows with WSL2, CI, DEV, QA, or PROD
 
-**Expected:**
-**Actual:**
+What you expected to happen:
+What actually happened:
 
-## Full output
+## The full output
 
-<!-- Paste the FULL error, not a summary. "It says something about a port"
-     costs a round trip; the actual error usually contains the answer. -->
+Paste the complete error, not a summary of it. "It said something about a port" costs a round trip to diagnose, whereas the actual text usually contains the answer.
 
 ```
 ```
 
-## Already tried
+## What you already tried
 
 ## Severity
 
-- [ ] Sev 1 — platform down, or money/data at risk
-- [ ] Sev 2 — major feature broken
-- [ ] Sev 3 — minor feature broken
-- [ ] Sev 4 — cosmetic
+- [ ] One: the platform is down, or money or data is at risk
+- [ ] Two: a major feature is broken
+- [ ] Three: a minor feature is broken
+- [ ] Four: cosmetic
