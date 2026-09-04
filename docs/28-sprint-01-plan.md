@@ -1,4 +1,4 @@
-# 28 — Sprint 1 Detailed Plan
+# 28: Sprint 1 Detailed Plan
 
 **Environment & Repository Foundation · Mon 31 Aug → Sun 13 Sep 2026**
 **49 h capacity · 32 pts committed · 17 pts buffer (35%)**
@@ -6,17 +6,17 @@
 ## Sprint goal
 > Both machines run a byte-identical Dev Container, the repository is governed with enforced quality gates, the first CI run is green, and Jira reflects the plan.
 
-**Roughly 60% of this sprint is installation.** That is honest, not padding — you cannot review code on a machine that cannot run it. This is the only sprint shaped this way.
+**Roughly 60% of this sprint is installation.** That is honest, not padding, you cannot review code on a machine that cannot run it. This is the only sprint shaped this way.
 
 ## Objectives
 - Docker Desktop, VS Code, Git, SSH working on macOS and Windows
 - WSL2 configured with the repository **inside** the WSL2 filesystem
 - Monorepo skeleton with governance files, PR/issue templates, `docs/` committed
 - `.devcontainer/` producing identical Python 3.12, Node 22, uv on both machines
-- **Cross-platform validation passed** — the proof that the approach works
+- **Cross-platform validation passed**: the proof that the approach works
 - Baseline CI green, branch protection on `main` (or explicitly BLOCKED)
 - Jira project created, Sprint 1 imported
-- **`NVL-EXT-01` Razorpay KYC research started** — longest lead time in the programme
+- **`NVL-EXT-01` Razorpay KYC research started**: longest lead time in the programme
 
 ## Stories
 
@@ -42,7 +42,7 @@ Install WSL2, Docker, VS Code, extensions, Git · generate SSH keys · clone · 
 ## Dependencies
 - **Confirm Day 1:** who holds GitHub repository admin
 - **Confirm Day 1:** Jira via MCP connector or CSV
-- **No third-party accounts needed** — deliberately sequenced so procurement cannot stall the start
+- **No third-party accounts needed**: deliberately sequenced so procurement cannot stall the start
 
 ## Risks
 
@@ -50,7 +50,7 @@ Install WSL2, Docker, VS Code, extensions, Git · generate SSH keys · clone · 
 |---|---|
 | Dev Container first build fails | **45-minute explicit buffer** (NVL-103.5); I fix the definition centrally |
 | WSL2 needs BIOS virtualisation | Flagged Day 1; teammate may need a reboot into BIOS |
-| Corporate proxy blocks registries | **Tell me on Day 1** — it also affects `uv sync`, `npm ci`, `docker pull` |
+| Corporate proxy blocks registries | **Tell me on Day 1**: it also affects `uv sync`, `npm ci`, `docker pull` |
 | No GitHub admin | NVL-106.5 reported **BLOCKED** with manual instructions, not silently closed |
 | Windows runs longer than macOS | Expected; the 30-minute troubleshooting buffer absorbs it |
 
@@ -71,6 +71,6 @@ Install WSL2, Docker, VS Code, extensions, Git · generate SSH keys · clone · 
 
 ## Retrospective questions
 1. Did we finish the committed points? If not, by how much?
-2. Where did time actually go — installation, waiting, reading, troubleshooting?
+2. Where did time actually go, installation, waiting, reading, troubleshooting?
 3. Which estimate was most wrong, and in which direction?
 4. What should Sprint 2 commit?

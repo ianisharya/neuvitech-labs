@@ -1,4 +1,4 @@
-# ADR-0005 — uv as the Python Project Manager
+# ADR-0005: uv as the Python Project Manager
 
 **Status:** Accepted · **Date:** 2026-08-30
 
@@ -9,7 +9,7 @@ The brief mandates uv. Verified present in my environment at 0.11.7.
 uv for Python version management, dependency resolution, locking, virtual environments and task running. `uv.lock` committed. CI installs with `uv sync --frozen`.
 
 ## Alternatives Considered
-**Poetry** — mature and widely used, but markedly slower resolution and a historically awkward relationship with PEP 621 metadata. **pip + pip-tools + pyenv** — three tools where one suffices. **PDM / Hatch** — capable, smaller ecosystems.
+**Poetry**: mature and widely used, but markedly slower resolution and a historically awkward relationship with PEP 621 metadata. **pip + pip-tools + pyenv**: three tools where one suffices. **PDM / Hatch**: capable, smaller ecosystems.
 
 None was seriously contested: the brief mandates uv, and uv is independently the strongest current option.
 

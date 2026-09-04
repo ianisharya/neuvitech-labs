@@ -1,6 +1,6 @@
-# 32 — Production Readiness Checklist
+# 32: Production Readiness Checklist
 
-**Every box must be ticked before the Sprint 14 production deployment.** Not a formality — each line represents a way systems fail in production.
+**Every box must be ticked before the Sprint 14 production deployment.** Not a formality, each line represents a way systems fail in production.
 
 ## Configuration
 - [ ] All nine bootstrap environment variables set in the `production` GitHub Environment
@@ -24,7 +24,7 @@
 - [ ] Rate limiting active on auth, checkout and AI endpoints
 - [ ] Security headers verified with an external scanner
 - [ ] TLS 1.3, HSTS preload, valid certificate, auto-renewal configured
-- [ ] **Human adversarial testing completed** — IDOR, privilege escalation, tampering
+- [ ] **Human adversarial testing completed**: IDOR, privilege escalation, tampering
 - [ ] DAST (ZAP) run with findings triaged
 - [ ] Dependency, container and IaC scans clean of HIGH/CRITICAL
 - [ ] Superuser account uses MFA; no hard-coded email comparison anywhere
@@ -33,7 +33,7 @@
 - [ ] All migrations applied; head recorded on the release
 - [ ] Every migration reversible or documented with a rollback runbook
 - [ ] Indexes verified against `EXPLAIN ANALYZE` on production-like volumes
-- [ ] **Backup taken and restore rehearsed** — RPO 5 min, RTO 1 h measured, not assumed
+- [ ] **Backup taken and restore rehearsed**: RPO 5 min, RTO 1 h measured, not assumed
 - [ ] Read replica configured and lag monitored
 - [ ] Connection pool sized and saturation alert set
 - [ ] Retention and erasure paths implemented for DSAR
@@ -47,7 +47,7 @@
 - [ ] Background jobs have retry, backoff and dead-letter handling
 - [ ] Feature flags default to a safe state
 
-## Observability — proven, not configured
+## Observability: proven, not configured
 - [ ] Structured logs shipping to Loki, PII excluded by allow-list
 - [ ] Metrics scraped; RED, USE and **business metrics** all present
 - [ ] Traces end to end from browser to database
@@ -90,7 +90,7 @@
 ## Legal and content
 - [ ] Privacy policy, terms of service, refund policy published
 - [ ] Cookie consent implemented, defaulting to decline non-essential
-- [ ] **No unsubstantiated claims** — no accreditation, no fabricated placement or salary figures
+- [ ] **No unsubstantiated claims**: no accreditation, no fabricated placement or salary figures
 - [ ] Contact and support routes working
 
 ## Sign-off

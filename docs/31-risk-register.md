@@ -1,4 +1,4 @@
-# 31 — Risk Register
+# 31: Risk Register
 
 Probability × Impact. Every risk has a detection method, a mitigation, a contingency and an allocated buffer.
 
@@ -6,26 +6,26 @@ Probability × Impact. Every risk has a detection method, a mitigation, a contin
 
 | ID | Risk | P | I | Detection | Mitigation | Contingency | Buffer |
 |---|---|---|---|---|---|---|---|
-| **R01** | **Razorpay merchant KYC delayed beyond Sprint 7** | High | High | Weekly status check from Sprint 2 | Started **Sprint 2 — five sprints early**, ~8 weeks slack | Build against sandbox; swap live keys when approved (they are a setting, not a deploy) | 8 weeks slack |
-| **R02** | **Scope vs capacity.** 980 team-hours for a platform this broad | High | High | Velocity at every Day 14 | Ruthless sequencing; Phase E is all post-launch; explicit out-of-scope list | Cut from the float list in `30-critical-path.md` §2 — never from identity, catalog, commerce, hardening or launch | 14–35% per sprint |
-| **R03** | **Sprint 7 payments integration** — highest complexity, external dependency, money at stake | Med | **Very High** | Spike in Sprint 6 reveals doc-vs-reality gaps | 36 pts not 42; ×2.0 rework multiplier; three weekend sessions; extra DoD bar; **both engineers read the code** | Extend into Sprint 8; delay LMS by one sprint | ×2.0 |
-| **R04** | **Content, not code, becomes the bottleneck.** A platform with no curriculum is a demo | High | High | Sprint 6 review — are there real programs to publish? | Catalog is data-driven, so authoring can start Sprint 5 in parallel with engineering | Launch with fewer, better programs | — |
+| **R01** | **Razorpay merchant KYC delayed beyond Sprint 7** | High | High | Weekly status check from Sprint 2 | Started **Sprint 2, five sprints early**, ~8 weeks slack | Build against sandbox; swap live keys when approved (they are a setting, not a deploy) | 8 weeks slack |
+| **R02** | **Scope vs capacity.** 980 team-hours for a platform this broad | High | High | Velocity at every Day 14 | Ruthless sequencing; Phase E is all post-launch; explicit out-of-scope list | Cut from the float list in `30-critical-path.md` §2, never from identity, catalog, commerce, hardening or launch | 14–35% per sprint |
+| **R03** | **Sprint 7 payments integration**: highest complexity, external dependency, money at stake | Med | **Very High** | Spike in Sprint 6 reveals doc-vs-reality gaps | 36 pts not 42; ×2.0 rework multiplier; three weekend sessions; extra DoD bar; **both engineers read the code** | Extend into Sprint 8; delay LMS by one sprint | ×2.0 |
+| **R04** | **Content, not code, becomes the bottleneck.** A platform with no curriculum is a demo | High | High | Sprint 6 review, are there real programs to publish? | Catalog is data-driven, so authoring can start Sprint 5 in parallel with engineering | Launch with fewer, better programs |, |
 | **R05** | **Observability found broken during Sprint 13 failure injection** | Med | High | The injection exercise itself | Full sprint allocated; ten scenarios, each a subtask | Fix in Sprint 13, re-test; delay launch by one sprint if alerts are fundamentally wrong | Full sprint |
 
 ## High risks
 
 | ID | Risk | P | I | Detection | Mitigation |
 |---|---|---|---|---|---|
-| R06 | Dev Container first build fails (proxy, RAM, image pull) | Med | High | Sprint 1 Day 6 | 45-minute explicit buffer; troubleshooting guide; I fix the definition centrally — **never a local workaround** |
+| R06 | Dev Container first build fails (proxy, RAM, image pull) | Med | High | Sprint 1 Day 6 | 45-minute explicit buffer; troubleshooting guide; I fix the definition centrally, **never a local workaround** |
 | R07 | Windows/WSL2 performance or path problems | Med | Med | Sprint 1 Day 7 cross-platform validation | Repo **inside** WSL2 mandated; validated on Day 7, not discovered in month three |
 | R08 | Async SQLAlchemy footguns | Med | Med | Test failures | `lazy="raise"` on every relationship; `36-troubleshooting-guide.md` §1; failure mode is loud and immediate |
 | R09 | First cloud provisioning takes far longer than estimated | Med | High | Sprint 11 | Three sprints before launch; you write the IaC; ×1.8 multiplier |
 | R10 | First production deploy fails | Med | High | Sprint 12 | Pipeline validated with ten explicit tests; rollback rehearsed; Day 13 held as buffer |
 | R11 | Video CDN cost scales faster than revenue | Med | High | Cost dashboard from Sprint 8 | Cache-hit ratio tracked; adaptive bitrate; signed short-lived URLs |
-| R12 | **Bus factor** — one person owns half the system | Med | High | Obvious in retrospect, too late | **Track swap at Sprint 10**; documentation-first; ADRs |
-| R13 | Sustained cadence — 7 days/week for 9 months | High | Med | Missed sessions | Day 14 buffer; roll to weekends, **never double a weekday**; one weekday off per week costs 9% and is absorbed |
+| R12 | **Bus factor**: one person owns half the system | Med | High | Obvious in retrospect, too late | **Track swap at Sprint 10**; documentation-first; ADRs |
+| R13 | Sustained cadence, 7 days/week for 9 months | High | Med | Missed sessions | Day 14 buffer; roll to weekends, **never double a weekday**; one weekday off per week costs 9% and is absorbed |
 | R14 | Two-track API drift | Med | Med | CI | Generated TypeScript from OpenAPI; CI fails on drift; Track A merges schema first |
-| R15 | Catalog over-abstraction — the registry becomes an unusable meta-system | Med | High | Sprint 6 | Constrained: JSONB for descriptive fields, extension tables for relational capability. Validated against three real kinds before extending |
+| R15 | Catalog over-abstraction, the registry becomes an unusable meta-system | Med | High | Sprint 6 | Constrained: JSONB for descriptive fields, extension tables for relational capability. Validated against three real kinds before extending |
 | R16 | Free certificates devalue the brand | Med | High | Market feedback | Real completion + assessment thresholds; verifiable; revocable |
 | R17 | Security incident in a payment-bearing system | Low | **Very High** | Scanning, audit, alerts | Security-by-architecture; blocking scanners; authorization test matrix; human adversarial testing in Sprints 3 and 13 |
 
@@ -43,8 +43,12 @@ Probability × Impact. Every risk has a detection method, a mitigation, a contin
 | R25 | GST/tax requirements discovered late | Med | Med | **Open question raised now**; cheaper to build in than retrofit |
 | R26 | Neither engineer has frontend experience | Med | Med | shadcn/ui vendored; Server Components by default; no client-state library; design tokens mechanical |
 | R27 | Estimates systematically wrong | Med | Med | Re-baselined at every Day 14 from real velocity, not defended |
+| R28 | Enterprise sales has a different motion than B2C, longer cycles, procurement, contract negotiation, invoicing terms that doc 39 does not solve | Med | Med | Sprint 21 delivers the architecture; the sales process itself is a business function, not an engineering deliverable. Revisit if enterprise deal volume outgrows the lightweight Organisation model, ADR-0015 |
+| R29 | Video bandwidth is the dominant variable cost and scales with success, so a popular launch could produce a large and fast-rising CDN bill | Med | High | Cache hit ratio and bandwidth per learner tracked as first-class metrics from day one (doc 14); adaptive bitrate reduces bytes to weak connections; cold storage for archival source; cost reviewed regularly, not discovered on an invoice, ADR-0017 |
+| R30 | Subscription-primary revenue depends on retention, a harder discipline than one-time acquisition; a lapse suspends access and is a fragile moment for the learner | Med | High | Progress is never deleted on lapse, so resubscribe is frictionless; grace period softens billing failures; streak and karma reward the consistency that also drives retention; renewal, proration and grace correctness are heavily tested (doc 09), ADR-0016 |
+| R31 | The AI tutor with persistent memory holds sensitive learner data, and self-hosting open models plus tracing is real operational work for two engineers | Med | Med | Memory stored in the platform's own database under existing privacy controls; sensitive personal data kept out by allow-list; learner can view and clear memory; AI never on the core learning path so an outage degrades gracefully; budgets bound cost, ADR-0018 |
 
-## Open questions — answers change the plan
+## Open questions: answers change the plan
 
 | # | Question | Needed by | If wrong |
 |---|---|---|---|
@@ -54,7 +58,7 @@ Probability × Impact. Every risk has a detection method, a mitigation, a contin
 | Q4 | Is GST invoicing required at launch? | Sprint 15 | Invoice schema change |
 | Q5 | Which cloud provider and region? | Sprint 8 | IaC, cost model, latency |
 | Q6 | Any existing accreditation to display? | Sprint 6 | We will not claim what is unevidenced |
-| Q7 | Brand assets — logo, typography, colour direction? | Sprint 5 | I choose defaults you may dislike |
+| Q7 | Brand assets, logo, typography, colour direction? | Sprint 5 | I choose defaults you may dislike |
 | Q8 | Zoom tier and API access? | Sprint 9 | Live learning slips |
 
 ## Buffer allocation

@@ -1,11 +1,11 @@
-# 08 — Security Architecture
+# 08: Security Architecture
 
 Security is an architectural concern applied at every layer, not a pre-launch checklist.
 
 ```
 Browser → CDN → WAF/reverse proxy → Next.js → FastAPI → PostgreSQL
-                                       ↓          ↓
-                                  Object store  Workers → Providers → AI
+ ↓ ↓
+ Object store Workers → Providers → AI
 ```
 
 ## 1. The question every sensitive flow answers
@@ -16,7 +16,7 @@ Browser → CDN → WAF/reverse proxy → Next.js → FastAPI → PostgreSQL
 
 - **Argon2id** password hashing, tuned parameters, transparent rehash on login when parameters change.
 - **Opaque server-side sessions, not JWTs.** 256-bit random token in an `httpOnly; Secure; SameSite=Lax` cookie; only a SHA-256 hash stored. Redis lookup with Postgres fallback. Sliding expiry with absolute cap.
-  **Why not JWT:** we require immediate revocation on logout, password change, role change, MFA enrolment and compromise. Stateless JWTs cannot revoke without a denylist — at which point you have server-side state anyway, minus the simplicity. "JWTs scale better" does not apply: a Redis GET is ~0.2 ms.
+ **Why not JWT:** we require immediate revocation on logout, password change, role change, MFA enrolment and compromise. Stateless JWTs cannot revoke without a denylist, at which point you have server-side state anyway, minus the simplicity. "JWTs scale better" does not apply: a Redis GET is ~0.2 ms.
 - **TOTP MFA** mandatory for any principal holding an admin-tier permission. Recovery codes single-use and hashed.
 - **Step-up re-authentication** for superuser grants, refunds, credential revocation and catalog publishing.
 - **Email verification** required before enrolment; single-use, hashed, time-boxed tokens.
@@ -28,11 +28,11 @@ Browser → CDN → WAF/reverse proxy → Next.js → FastAPI → PostgreSQL
 - **RBAC + resource scoping.** Permissions are strings: `catalog.program.publish`, `commerce.refund.create`, `credential.revoke`. Roles are permission sets. Users hold roles, optionally scoped (an instructor scoped to a cohort).
 - **Exactly one policy decision point:** `security/authz.py` exposing `require_permission(...)` as a FastAPI dependency. Authorization logic appears nowhere else; CI fails the build on ad-hoc role comparisons in routers.
 - **Entitlements are checked separately from permissions.** Permissions answer "may this role perform this action type"; entitlements answer "has this user been granted this product". Both must pass for learning content.
-- **Default deny.** Every endpoint declares a permission or is explicitly `@public`. One that declares neither **fails a startup assertion** — you cannot ship an accidentally open route.
+- **Default deny.** Every endpoint declares a permission or is explicitly `@public`. One that declares neither **fails a startup assertion**: you cannot ship an accidentally open route.
 
 ## 4. Superuser
 
-`SUPERUSER_EMAIL` is read once by an idempotent bootstrap that creates the user if absent and grants `platform_superuser`. The account is created **pending** — no password in config — and must complete an out-of-band invitation plus MFA enrolment before it can authenticate.
+`SUPERUSER_EMAIL` is read once by an idempotent bootstrap that creates the user if absent and grants `platform_superuser`. The account is created **pending**: no password in config, and must complete an out-of-band invitation plus MFA enrolment before it can authenticate.
 
 **CI fails the build on any hard-coded email comparison outside the single bootstrap module.** Privilege exists only as roles and permissions.
 
@@ -52,14 +52,14 @@ Superuser actions are audited, MFA-gated and rate-limited. Impersonation, if imp
 | Rate limiting | Redis token bucket, tiered by endpoint class and principal, thresholds in settings |
 | Secrets | Nine bootstrap env vars; everything else encrypted in the database. Gitleaks in pre-commit **and** CI, full-history scan |
 | Encryption | TLS 1.3 in transit; at-rest on database and object storage; application-level for MFA seeds and provider tokens |
-| Errors | Stack traces never reach users — error code plus correlation id only |
+| Errors | Stack traces never reach users, error code plus correlation id only |
 | Dependencies | Committed lockfiles, Dependabot, `pip-audit`, `npm audit` |
 
 ## 6. File and media security
 
 Type validation by **content sniffing, not extension**. Size caps per type. Randomised storage keys, never the user's filename. **Private buckets by default**; access only via short-lived signed URLs issued after an authorization check. Malware scanning (ClamAV in a worker) with quarantine until clean. Uploads served from a **separate origin** so a malicious file cannot execute in the application's origin. EXIF stripped from images.
 
-## 7. Threat model — top risks
+## 7. Threat model: top risks
 
 | Threat | Mitigation |
 |---|---|
@@ -74,7 +74,7 @@ Type validation by **content sniffing, not extension**. Size caps per type. Rand
 | Supply chain | Pinned lockfiles, Dependabot, Trivy, SBOM, provenance attestation |
 | Insider or admin misuse | Append-only audit, MFA, step-up auth, least privilege, alerting on anomalous grant volume |
 
-## 8. Security tooling in CI — all free and open source
+## 8. Security tooling in CI: all free and open source
 
 | Stage | Tool | Blocking |
 |---|---|---|
@@ -88,4 +88,4 @@ Type validation by **content sniffing, not extension**. Size caps per type. Rand
 
 ## 9. Privacy
 
-Data minimisation. Documented retention per data class. Access control on every read, audit on sensitive reads. DSAR export and erasure paths. **PII excluded from logs, metrics, traces and AI observability by an allow-list serialiser** — an allow-list, not a blocklist, because a blocklist fails silently the moment a new field is added. IP addresses hashed where retained for analytics.
+Data minimisation. Documented retention per data class. Access control on every read, audit on sensitive reads. DSAR export and erasure paths. **PII excluded from logs, metrics, traces and AI observability by an allow-list serialiser**: an allow-list, not a blocklist, because a blocklist fails silently the moment a new field is added. IP addresses hashed where retained for analytics.

@@ -1,4 +1,4 @@
-# 24 — Capacity & Estimation Model
+# 24: Capacity & Estimation Model
 
 **How every number in this plan was derived.** If a premise here is wrong, tell me and I re-derive rather than defend.
 
@@ -29,9 +29,9 @@ Not "review AI code". The realistic distribution across the programme:
 | Environment, setup, tooling | 7% | Front-loaded in Sprints 1–2, recurring later |
 | **Deployment and operations** | 5% | Sprints 11–14 and ongoing |
 
-**Roughly 23% of your time is experimentation, human-written code and operations** — not review. That is what makes you engineers on this project rather than a review queue.
+**Roughly 23% of your time is experimentation, human-written code and operations**: not review. That is what makes you engineers on this project rather than a review queue.
 
-## 3. Human throughput rates — the basis of every estimate
+## 3. Human throughput rates: the basis of every estimate
 
 Conservative on purpose.
 
@@ -47,11 +47,11 @@ Conservative on purpose.
 | Manual test of one user flow | 10–20 min including notes |
 | Writing a bug report I can act on | 5–10 min |
 | Commit → push → PR → review → merge → Jira | 10 min per ticket |
-| **Context switch between tasks** | 5–10 min — why weekdays carry one thing |
+| **Context switch between tasks** | 5–10 min, why weekdays carry one thing |
 | Deploy to an environment + verify | 20–30 min |
 | Investigating a production alert | 30–90 min |
 
-## 4. The rework multiplier — nothing works first time
+## 4. The rework multiplier: nothing works first time
 
 | Work type | Multiplier |
 |---|---|
@@ -63,11 +63,11 @@ Conservative on purpose.
 | **Deployment and infrastructure** | **× 1.8** |
 | Production incident work | × 2.5 |
 
-**These are already inside every estimate in this pack.** When you see "45 min", that is the expected time *including* the likely correction round — not the optimistic path.
+**These are already inside every estimate in this pack.** When you see "45 min", that is the expected time *including* the likely correction round, not the optimistic path.
 
 ## 5. Worked example
 
-**NVL-214 — Payment webhook handler with signature verification** (Sprint 7)
+**NVL-214, Payment webhook handler with signature verification** (Sprint 7)
 
 | Step | Who | Time |
 |---|---|---|
@@ -96,7 +96,7 @@ Which is why this ticket spans **two weekend sessions**, not one weekday hour. S
 | 1–2 | **32** | 35% | Environment setup, first exposure, highest uncertainty |
 | 3–5 | **38** | 22% | Finding rhythm |
 | 6–10 | **42** | 14% | Steady state |
-| **7** | **36** | 27% | **Payments — highest-risk sprint** |
+| **7** | **36** | 27% | **Payments, highest-risk sprint** |
 | 11–14 | **38** | 22% | Deployment, production, incident risk |
 | 15–20 | **40** | 18% | Integration-heavy |
 
@@ -106,31 +106,31 @@ Which is why this ticket spans **two weekend sessions**, not one weekday hour. S
 
 | Phase | Sprints | Days | Team hours | Ends |
 |---|---|---|---|---|
-| **A — Foundation & Environment** | 1–2 | 28 | 98 | 27 Sep 2026 |
-| **B — Core Platform** | 3–7 | 70 | 245 | 6 Dec 2026 |
-| **C — Learning, Commerce & Credentials** | 8–11 | 56 | 196 | 31 Jan 2027 |
-| **D — Launch: Hardening, Production, Observation** | 12–14 | 42 | 147 | **14 Mar 2027** |
-| **E — Extended Scope & Scale** | 15–20 | 84 | 294 | **6 Jun 2027** |
-| **Total** | **20** | **280** | **980** | — |
+| **A, Foundation and Environment** | 1-2 | 28 | 98 | 27 Sep 2026 |
+| **B, Core Platform** | 3-7 | 70 | 245 | 6 Dec 2026 |
+| **C, Learning, Commerce and Credentials** | 8-11 | 56 | 196 | 31 Jan 2027 |
+| **D, Launch: Hardening, Production, Observation** | 12-14 | 42 | 147 | **14 Mar 2027** |
+| **E, Extended Scope and Scale** | 15-24 | 140 | 490 | **1 Aug 2027** |
+| **Total** | **24** | **336** | **1,176** |, |
 
-At the committed floor (1.0 h weekdays) the programme is 880 h; at sustained stretch (1.5 h) it is 1,080 h.
+At the committed floor (1.0 h weekdays) the programme is about 1,056 h; at sustained stretch (1.5 h) it is about 1,296 h.
 
-**Sprint 1 is unlike any other:** roughly 60% is machine setup rather than code work. That is honest, not padding — you cannot review code on a machine that cannot run it.
+**Sprint 1 is unlike any other:** roughly 60% is machine setup rather than code work. That is honest, not padding. You cannot review code on a machine that cannot run it.
 
 ## 8. What is NOT in these estimates
 
-- **My generation time** — effectively zero from your side.
-- **Reading this documentation** — ~60 min of pre-reading before Day 1.
-- **External wait time** — merchant KYC, DNS propagation, cloud provisioning. Tracked as `NVL-EXT-*` tickets started early, because they consume calendar, not effort.
-- **Meetings** — there are none. Review and retrospective sit inside the Day-14 session.
-- **Sick days and holidays** — absorbed by Day-14 buffer. Lose more than two sessions in a sprint and tell me on Day 14 so I can re-baseline.
+- **My generation time**: effectively zero from your side.
+- **Reading this documentation**: ~60 min of pre-reading before Day 1.
+- **External wait time**: merchant KYC, DNS propagation, cloud provisioning. Tracked as `NVL-EXT-*` tickets started early, because they consume calendar, not effort.
+- **Meetings**: there are none. Review and retrospective sit inside the Day-14 session.
+- **Sick days and holidays**: absorbed by Day-14 buffer. Lose more than two sessions in a sprint and tell me on Day 14 so I can re-baseline.
 
 ## 9. How to tell me the plan is wrong
 
 At each Day 14, answer three questions:
 
 1. Did we finish the committed points? If not, by how much?
-2. Where did the time actually go — review, running, debugging, experimenting, or setup?
+2. Where did the time actually go, review, running, debugging, experimenting, or setup?
 3. Which single estimate was most wrong, and in which direction?
 
 **Three sprints of honest velocity data is worth more than any amount of up-front estimating.**

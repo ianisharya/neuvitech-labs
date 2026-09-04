@@ -1,25 +1,54 @@
-# Every PR needs a review from the other track. These paths need one from a
-# specific owner because a mistake in them is expensive or irreversible.
+# Code ownership for NeuViTech Labs.
+#
+# Every pull request already requires a review from the other track. These
+# rules add a required owner on the paths where a mistake is expensive or
+# hard to reverse. With two engineers, an owner entry names both, because
+# GitHub does not count a pull request's own author toward its required
+# review, so listing both means the other person is always the required
+# reviewer without anyone having to decide who owns what each time.
+#
+# As the team grows, these entries become the real ownership map, with
+# different owners per area. For now they are the safety net on the
+# highest-consequence code.
 
+# Default: any change needs a review from the team.
+*                                               @ianisharya @manu2raj
 
-*                           @ianisharya @manu2raj
+# The database layer and every migration. Schema changes are close to
+# irreversible once they have run in production, so they get the highest care.
+/apps/api/migrations/                           @ianisharya @manu2raj
+/apps/api/src/neuvitech/db/                     @ianisharya @manu2raj
 
-# Schema changes are close to irreversible once deployed.
-/apps/api/migrations/       @ianisharya @manu2raj
-/apps/api/src/neuvitech/db/ @ianisharya @manu2raj
+# Security: authentication, authorization, the single policy decision point.
+# A mistake here is silent until it is exploited.
+/apps/api/src/neuvitech/security/               @ianisharya @manu2raj
 
-# Authorization mistakes are silent until exploited.
-/apps/api/src/neuvitech/security/  @ianisharya @manu2raj
+# Money and access. These modules decide who has paid and who may enter,
+# and a subtle error is both expensive and hard to unwind.
+/apps/api/src/neuvitech/modules/commerce/       @ianisharya @manu2raj
+/apps/api/src/neuvitech/modules/payments/       @ianisharya @manu2raj
+/apps/api/src/neuvitech/modules/entitlement/    @ianisharya @manu2raj
 
-# Money.
-/apps/api/src/neuvitech/modules/commerce/     @ianisharya @manu2raj
-/apps/api/src/neuvitech/modules/payments/     @ianisharya @manu2raj
-/apps/api/src/neuvitech/modules/entitlement/  @ianisharya @manu2raj
+# Credentials. A forged or wrongly revoked certificate damages the thing
+# the platform sells, its credibility.
+/apps/api/src/neuvitech/modules/credential/     @ianisharya @manu2raj
 
-# Pipeline and infrastructure changes affect every environment.
-/.github/          @ianisharya @manu2raj
-/infrastructure/   @ianisharya @manu2raj
-/.devcontainer/    @ianisharya @manu2raj
+# The AI gateway, guardrails, tutor memory, and tool authorization. This is
+# where learner data and model authority meet, so it is reviewed closely.
+/apps/api/src/neuvitech/modules/ai/             @ianisharya @manu2raj
 
-# The source of truth. Changes here change how everyone works.
-/docs/             @ianisharya @manu2raj
+# The pipeline and infrastructure. A change here affects every environment
+# and every deploy.
+/.github/                                       @ianisharya @manu2raj
+/infrastructure/                                @ianisharya @manu2raj
+/.devcontainer/                                 @ianisharya @manu2raj
+
+# The documentation set is the source of truth. A change here changes how
+# everyone understands and builds the system.
+/docs/                                          @ianisharya @manu2raj
+
+# The governance files themselves.
+/CONTRIBUTING.md                                @ianisharya @manu2raj
+/SECURITY.md                                    @ianisharya @manu2raj
+/CODEOWNERS                                     @ianisharya @manu2raj
+/LICENSE                                        @ianisharya @manu2raj

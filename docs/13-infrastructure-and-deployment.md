@@ -1,117 +1,63 @@
-# 13 — Infrastructure & Deployment
+# 13 - Infrastructure, Deployment and Scale
+
+This document was revised to design honestly for thousands of concurrent learners, starting from a baseline of five thousand and built to scale beyond it, and to account for video at scale. The earlier version deferred heavy infrastructure on the reasonable grounds that two part-time engineers should not operate a large system early. That instinct is still right, and the design here holds to it by leaning on managed services and a content delivery network to carry the heavy load, rather than by building and operating that machinery ourselves.
 
 ## 1. Environments
 
-| | Local | DEV | QA | PROD |
-|---|---|---|---|---|
-| Runs in | Dev Container | Cloud | Cloud | Cloud |
-| URL | localhost | dev.neuvitechlabs.com | qa.neuvitechlabs.com | **neuvitechlabs.com** |
-| Database | Container Postgres | Isolated managed | Isolated, anonymised seed | Managed, PITR, replica |
-| Deploy | — | Auto on merge to `main` | Manual promotion | Manual + required reviewer |
-| Payments | Test keys | Test keys | Test keys | **Live keys** |
-| Mail | Mailpit | Sandbox domain | Sandbox domain | Live sending domain |
-| Robots | — | `Disallow: /` | `Disallow: /` | Allow |
-| Secrets | `.env` (git-ignored) | GitHub Env `development` | GitHub Env `qa` | GitHub Env `production` |
+There are four environments. Local is the Dev Container on each engineer's machine. Development is a cloud environment that updates automatically when work merges. QA is a cloud environment that mirrors production for testing, with its own isolated and anonymised data. Production is the live platform at the real domain, with a managed database that has point-in-time recovery and a read replica.
 
-**Absolute rules:** no environment holds another's credentials · QA never points at the PROD database · no production data reaches a lower environment without irreversible anonymisation · **non-production robots is `Disallow: /`** (an indexed QA environment is a real and common incident).
+The rules that separate them do not bend. No environment holds another's credentials. QA never points at the production database. No production data ever reaches a lower environment without being irreversibly anonymised first. Non-production environments tell search engines not to index them, because an indexed QA site is a real and common embarrassment. Secrets live in per-environment stores that a lower environment physically cannot read.
 
-## 2. Build and promotion
+## 2. Build once, promote the same artefact
 
-```
-Commit → CI builds ONE image, tagged with the commit SHA
-  → deploy that image to DEV
-  → promote THE SAME image to QA
-  → promote THE SAME image to PROD
-```
+A commit that passes the pipeline produces one container image, tagged with the commit it came from. That exact image is deployed to development, then the same image is promoted to QA, then the same image is promoted to production. Nothing is rebuilt between environments, because rebuilding means shipping something you never tested. The image and the database migration head are recorded together on each release, so a rollback is exact and not a guess.
 
-**Rebuilding per environment means you never tested what you shipped.** The image digest is recorded on the GitHub Release alongside the Alembic head, so a rollback is deterministic.
+## 3. The production shape, designed for five thousand concurrent and up
 
-Images: multi-stage, non-root user, slim base, pinned digests, `HEALTHCHECK`, SBOM generated, Trivy-scanned, no secrets baked in.
+The application is built to run as several identical stateless copies behind a load balancer, and this is the single most important fact about how it scales. Because no copy holds any state that another copy needs, handling more learners is a matter of running more copies, and running more copies is something the platform can do automatically as load rises and undo as it falls. Five thousand concurrent learners is the starting point the system is sized for, and the same design carries to far more by adding copies, because nothing in the request path assumes a fixed number of them.
 
-## 3. Production topology
+State that must be shared lives in services built to be shared. The database is a managed PostgreSQL with a primary for writes and one or more read replicas for the many reads, because a learning platform reads vastly more than it writes, and catalogue and content reads can be served from replicas to keep the primary free for the writes that genuinely need it. A managed Redis carries caching, sessions, rate limiting, and the queue for background work. Object storage holds media, served through the content delivery network. None of these is something the two engineers operate by hand; they are managed services chosen precisely so that the hard parts, failover, patching, point-in-time recovery, are the provider's responsibility and not a two-person team's.
 
-```
-                    Cloudflare (DNS · CDN · WAF · TLS)
-                              │
-                    ┌─────────▼─────────┐
-                    │   Load balancer   │
-                    └────┬─────────┬────┘
-                         │         │
-                 ┌───────▼──┐  ┌───▼──────┐
-                 │ Web (2+) │  │ API (2+) │   stateless, horizontally scaled
-                 └──────────┘  └───┬──────┘
-                                   │
-              ┌──────────┬─────────┼──────────┬─────────────┐
-              ▼          ▼         ▼          ▼             ▼
-        Managed      Managed    Object    Worker (1+)   Observability
-        PostgreSQL   Redis      Storage    (ARQ)        (OTel → Grafana)
-        + replica               + CDN
-```
+The heaviest load, video, largely does not touch the application at all. As described in doc 41, video is served from the content delivery network's edge, close to learners, and the application's only involvement is checking entitlement and issuing a short-lived signed URL. This is what makes five thousand concurrent learners watching video affordable: the application handles five thousand quick permission checks, and the content delivery network handles the actual gigabytes. If video came from the application's own servers, the design would fall over at a fraction of this scale and cost many times more. It does not, by deliberate design.
 
-**Rationale:** managed PostgreSQL because losing the database is unrecoverable and two part-time engineers should not be responsible for PITR configuration, failover and patching. Everything else is stateless containers, which is the cheapest thing to operate and the easiest to scale.
+## 4. What carries the load, piece by piece
 
-**Kubernetes is deliberately deferred** (ADR-0013). At this scale a container platform with managed data services delivers the same availability at a fraction of the operational cost, and Kubernetes' failure modes would consume sprint capacity that belongs to the product. The application is stateless and twelve-factor, so migrating later is packaging, not rewriting. Revisit at >8 replicas or multi-team ownership.
+The content delivery network carries video bandwidth and static assets, serving the vast majority of bytes from edge caches without touching origin. This is the largest load and it is almost entirely offloaded.
 
-## 4. Infrastructure as code
+The read replicas carry catalogue and content reads, which are the bulk of database work, and these are further cushioned by caching in Redis and by a content delivery network in front of public catalogue pages, so that a popular program's page is served from cache to most visitors and reaches the database rarely.
 
-**OpenTofu** (Terraform-compatible, MPL-licensed, no BUSL exposure) under `infrastructure/tofu/`, with remote state and locking. Everything is code: networking, database, Redis, object storage, DNS records, TLS, container services, secrets references (**never secret values**), monitoring, alerts.
+The application copies carry the genuine application work: authentication, entitlement checks, enrolment, progress writes, commerce, the AI gateway. This work is light per request and scales by adding copies.
 
-Human-written infrastructure code is expected and welcomed here — this is one of the areas where you will likely write more than I do, because it interacts with account-specific details I cannot see.
+Background workers carry everything slow or scheduled: video processing, email, certificate generation, subscription renewals, reconciliation, karma calculation. These run separately from the request path and scale on their own, so a burst of video processing never slows down a learner loading a page.
 
-## 5. Secrets
+## 5. The scaling path, taken in order and only when measured
 
-| Where | Holds |
-|---|---|
-| GitHub Environment secrets | The nine bootstrap variables, per environment, reviewer-gated on `production` |
-| Database (encrypted with `ENCRYPTION_KEY`) | **Everything else** — payment keys, mail credentials, Zoom, LLM keys |
-| Nowhere ever | Secrets in code, images, logs, Jira, or documentation |
+Scaling is done in a deliberate order, cheapest and highest-leverage first, and each step is taken because a measurement showed it was needed, never on a hunch.
 
-Rotating a payment key is an admin action, not a deployment (doc 05).
+First, raise the content delivery network's cache effectiveness, because a higher cache hit ratio is the cheapest possible win and directly reduces both cost and load. Second, add application copies, which is trivial because they are stateless. Third, widen caching in Redis so more reads never reach the database. Fourth, add or strengthen read replicas for catalogue and content reads. Fifth, add background worker capacity. Sixth, partition the highest-volume tables, the streams of progress and analytics events, so they stay fast as they grow. Each of these is triggered by a dashboard metric crossing a threshold, and the dashboards in doc 14 exist partly to make these decisions on evidence.
 
-## 6. Deployment procedure
+## 6. On Kubernetes, an honest reassessment
 
-```
-1. Pre-flight: CI green · QA signed off · migrations reviewed · rollback plan stated
-2. Announce start; enable maintenance banner if the migration is destructive
-3. Run migrations (expand phase only — always backward-compatible)
-4. Deploy the new image to one instance (canary)
-5. Health check the canary; watch error rate and latency for 5 minutes
-6. Roll out to remaining instances
-7. Smoke tests (automated + manual)
-8. Watch dashboards for 30 minutes
-9. Record the release: image digest, Alembic head, Jira keys included
-10. Contract-phase migration in a later release, once the old code is gone
-```
+The earlier plan deferred Kubernetes, on the sound reasoning that its operational complexity would consume a two-person team's capacity for capability they did not yet need. That decision is recorded in ADR-0013, and the move to a larger scale target of five thousand concurrent and up naturally raises the question of whether it still holds.
 
-**Rollback:** redeploy the previous image tag (fast path, under 5 minutes). Database rollback via the down-migration when reversible, otherwise via the documented runbook. Because migrations are expand/contract, the previous image always works against the current schema — **which is the entire reason for the pattern**.
+It does hold, and here is the honest reasoning. The thing that makes large scale hard to operate is stateful, sprawling infrastructure, and the design here deliberately pushes almost all of that onto managed services and a content delivery network. The application itself remains simple: stateless copies behind a load balancer, scaled up and down automatically by the hosting platform. Modern managed container platforms do this automatic scaling perfectly well without Kubernetes, and they do it without asking two engineers to become cluster operators. Kubernetes earns its complexity when you have many different services with different scaling needs owned by different teams, or when you need scheduling sophistication that a simpler platform cannot provide. The platform has one application, one worker pool, and two engineers. It does not have that problem. Choosing Kubernetes here would be paying a large operational tax for flexibility that would sit unused, and taking on a large new surface of failure modes that the team would have to learn under production pressure.
 
-## 7. DNS and TLS
+So the decision stands, and it stands for a reason that scale did not change: the application is stateless and the heavy state is managed elsewhere, so it scales by running more copies, and running more copies does not require Kubernetes. The revisit trigger is unchanged and honest: if the platform grows to many independently scaled services, or to multiple teams needing independent deploys, or to a scheduling need a simpler platform cannot meet, Kubernetes comes back onto the table. Until one of those is actually true, it is complexity without payoff. ADR-0013 is updated to record this reassessment rather than being contradicted by it.
 
-`neuvitechlabs.com` on Cloudflare. Records: apex and `www` → load balancer, `dev` and `qa` → their environments, MX and SPF/DKIM/DMARC for the sending domain, CAA restricting issuance.
+## 7. Deployment and rollback
 
-TLS via automated certificates with auto-renewal; expiry alert at 14 days as a backstop, because auto-renewal failing silently is a classic outage.
+Deploying is a careful sequence. The pipeline is confirmed green, QA is signed off, migrations are reviewed, and a rollback plan is stated before anything ships. Migrations are applied in a way that keeps the old code working against the new schema, so that the new and old versions can briefly coexist during a rollout, which is what makes a zero-downtime deploy and a safe rollback possible at all. A new version goes out to a small slice of traffic first, is watched for errors and latency, and only then rolls out fully. Smoke tests run against production after the deploy, and the release is watched for a period before it is considered done.
 
-## 8. Scaling plan — in order, and only when measured
+Rollback is fast because of how deploys are built. Bad application code is undone by redeploying the previous image, in minutes. A bad configuration is undone by changing a setting in the database, with no deploy at all, because configuration is data as described in doc 05. A bad feature is turned off with a feature flag, again with no deploy. Two of the three fastest recoveries need no deployment, which is the direct payoff of the database-driven configuration decision.
 
-1. Increase CDN cache-hit ratio (cheapest win by a wide margin)
-2. Add web/API replicas (stateless, trivial)
-3. Tune Redis cache coverage
-4. Add a PostgreSQL read replica for catalog reads
-5. Add worker replicas
-6. Partition high-volume event tables
-7. Optimise the top ten slow queries from `pg_stat_statements`
-8. Only then consider service extraction
+## 8. Domain, network and certificates
 
-**Never scale on intuition.** Each step is triggered by a dashboard metric, not a feeling.
+The platform runs at neuvitechlabs.com, with the website, the development and QA environments, and the mail-sending domain all configured in DNS. Traffic is protected in transit by current TLS, with certificates renewed automatically and an alert well before any certificate could expire, because a silently expired certificate is a classic and avoidable outage. A web application firewall sits in front of the platform to absorb obvious abuse before it reaches the application.
 
-## 9. Business continuity
+## 9. Cost, named honestly
 
-Daily full backup plus continuous WAL for PITR. **Restore rehearsed quarterly** — a scheduled ticket, not an intention. Object storage versioned with lifecycle rules. **RPO 5 minutes, RTO 1 hour**, both validated in the Sprint 14 disaster-recovery exercise, not assumed.
+The dominant variable cost is video bandwidth from the content delivery network, which scales with how much learners watch. This is the good kind of cost, because it grows with engagement, but it is real and it is watched from day one through the cost metrics in doc 14. After that come the managed database and its replicas, the managed Redis, object storage split between fast and cold tiers, the application and worker compute, and AI inference for the tutor, which is bounded by budgets described in doc 12. Everything expensive is either offloaded to a service that charges for what is used, or bounded by an explicit budget, so that cost scales with the platform's success rather than lying in wait as a fixed liability. A cost model with real numbers is built once the hosting provider is chosen, and cost is reviewed regularly rather than discovered on a bill.
 
-## 10. Cost posture
+## 10. Business continuity
 
-Free and open source by default across frameworks, database engine, CI, observability, IaC, testing and security scanning.
-
-**Unavoidable costs, disclosed:** domain · production compute · managed PostgreSQL · **object storage and CDN egress — the dominant variable cost, scaling with video watch time** · transactional email above free tier · payment gateway fees · LLM usage (mitigated by caching, small models for classification and hard budgets) · Zoom plan for live cohorts.
-
-A cost model with sensitivity analysis is a Sprint 11 deliverable, once the hosting provider is chosen.
+The database is backed up continuously with point-in-time recovery, so the platform can be restored to any moment rather than only to last night. This is rehearsed on a schedule, because a backup nobody has restored is a hope and not a backup. Object storage is versioned so that content cannot be lost to an accidental overwrite. The recovery targets, how much data could be lost and how long recovery takes, are set explicitly and validated in a real drill rather than assumed.

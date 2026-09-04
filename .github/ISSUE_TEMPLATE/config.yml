@@ -2,4 +2,4 @@ blank_issues_enabled: true
 contact_links:
   - name: Security vulnerability
     url: https://github.com/ianisharya/neuvitech-labs/security/advisories/new
-    about: Do not open a public issue. Report privately or email security@neuvitechlabs.com
+    about: Do not open a public issue for a security problem. Report it privately here, or by the contact in SECURITY.md.
