@@ -90,7 +90,26 @@ PLATFORM outbox_event · job_run · notification · media_asset
 
 ## 5. Migration discipline
 
-- **Expand/contract only.** Add the new column and dual-write, then remove the old one in a later migration. Deploys never require downtime.
+- ```
+```
+   EXPAND / CONTRACT: why a deploy can always roll back
+
+   Release N     add new column, write to BOTH
+                 old code still works, new code works
+                        |
+   Release N+1   switch reads to the new column
+                 old code still works
+                        |
+   Release N+2   drop the old column
+                 only now is the old code broken,
+                 and it is long gone
+
+   At every step the PREVIOUS image still runs against
+   the CURRENT schema. That is precisely what makes
+   a rollback safe.
+```
+
+**Expand/contract only.** Add the new column and dual-write, then remove the old one in a later migration. Deploys never require downtime.
 - **Every migration tested `upgrade` AND `downgrade` in CI.** A migration you cannot reverse is a deploy you cannot roll back.
 - **Autogenerate is a first draft, not an answer.** It misses renames (it drops and recreates, destroying data), server defaults, check constraints, enum changes.
 - **Never edit a migration that has run anywhere.** Write a new one.

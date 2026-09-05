@@ -16,6 +16,26 @@ For live sessions, the target is a near-live broadcast with a delay of roughly f
 
 A single video file at a single quality is the wrong way to serve video to a diverse audience. A learner on fibre and a learner on a train on mobile data need different things from the same lecture, and neither should have to choose manually.
 
+```
+            ADAPTIVE BITRATE: one lecture, many qualities
+
+  Source lecture
+       |
+       +--> 1080p  ---> [seg][seg][seg][seg][seg] ...
+       +--> 720p   ---> [seg][seg][seg][seg][seg] ...
+       +--> 480p   ---> [seg][seg][seg][seg][seg] ...
+       +--> 360p   ---> [seg][seg][seg][seg][seg] ...
+
+  The player picks a segment at a time, measuring speed:
+
+  strong wifi      ->  1080p 1080p 1080p 1080p
+  train, weakening ->  1080p  720p  480p  360p   (steps down)
+  recovers         ->   360p  480p  720p 1080p   (steps back up)
+
+  The learner sees a lecture that KEEPS PLAYING and changes
+  sharpness, instead of one that freezes to buffer.
+```
+
 Every piece of video on the platform is processed into multiple quality levels, from low resolution for weak connections up to high resolution for strong ones, and each level is chopped into small segments of a few seconds each. The player, running in the learner's browser, requests segments one at a time and continuously measures how quickly they arrive. When the connection is strong, it reaches for higher quality. When the connection weakens, it quietly steps down to a lower quality rather than stopping to buffer. The learner sees a lecture that stays playing and adjusts its sharpness, rather than a lecture that freezes. This is the same technology every large streaming service uses, and it is the single most important decision for making video feel fast.
 
 The platform uses HLS, the widely supported standard for this, so that playback works across browsers and devices without special plugins.
@@ -23,6 +43,30 @@ The platform uses HLS, the widely supported standard for this, so that playback 
 ## 3. The content delivery network, why video never comes straight from us
 
 If every learner pulled video directly from the platform's own servers, those servers would be overwhelmed, the cost would be enormous, and a learner far from the server would wait. Instead, video is served from a content delivery network, which is a global fleet of edge servers that cache content close to learners.
+
+```
+        WHY VIDEO NEVER COMES STRAIGHT FROM US
+
+  WITHOUT a CDN                  WITH a CDN
+  every learner hits origin      edge serves the region
+
+   learner  learner  learner      learner learner learner
+      \       |       /               \      |      /
+       \      |      /                 \     |     /
+        v     v     v                    v   v   v
+      [ OUR SERVERS ]                 [ EDGE, nearby ]
+       overwhelmed, slow,                    |
+       expensive, far away          (cache miss only once)
+                                             |
+                                             v
+                                     [ ORIGIN STORAGE ]
+                                      touched rarely
+
+  Our application only checks permission and issues a
+  short-lived signed URL. It never serves the bytes.
+  That is what makes thousands of concurrent watchers
+  affordable.
+```
 
 The first time a learner in a city requests a segment, it is fetched from origin storage and cached at the edge server nearest them. Every subsequent learner in that region gets it from that nearby edge, fast and without touching the platform's origin. For popular content, which is most content, the origin serves each segment rarely and the edge serves it thousands of times. This is what makes serving video to thousands of concurrent learners both fast and affordable, and it is why the cost of video scales with how much is watched rather than with how many servers we run.
 
@@ -36,13 +80,63 @@ One way is true low-latency interactive streaming, where the delay is under two 
 
 The other way is near-live broadcast, where the instructor's stream is delayed by a handful of seconds, delivered through the same adaptive bitrate and content delivery network as recorded video, with learner interaction happening through a live chat alongside the video. This scales to tens of thousands of concurrent learners on the same affordable infrastructure as recorded playback, because to the delivery network a live broadcast is just recorded video that is being created a few seconds ahead of when it is watched.
 
+```
+     LIVE: near-live broadcast, the choice we made
+
+  Instructor speaks
+        |
+        v
+  Encoder ---> segments created a few seconds ahead
+        |
+        v
+  Same CDN as recorded video  <-- this is the whole trick
+        |
+        v
+  Thousands of learners, 5 to 20 seconds behind live
+        |
+        +--> interaction happens in CHAT, not voice
+        |
+        v
+  Session ends -> recording processed -> dropped into
+                  the SAME lesson slot, same player
+
+  Rejected alternative: sub-2-second interactive streaming.
+  Genuinely hard, expensive, does not scale cheaply, and
+  thousands of people cannot all speak at once anyway.
+```
+
 The platform uses the second approach. This is not a compromise forced by cost so much as a recognition of what a live class of thousands actually is. Thousands of people cannot all speak at once anyway. The instructor teaches, and interaction flows through chat, questions, and polls, which is how large live classes genuinely work. The delay of several seconds is invisible to the learning experience and is what lets a live cohort scale without a specialised and expensive real-time system.
 
 A live session is captured, broadcast near-live, and simultaneously recorded. The moment it ends, the recording is processed into the same adaptive bitrate format as any other video and placed into the course structure, so a learner who missed the live session watches the recording through the identical player, in the identical place, with no difference in experience beyond the absence of live chat.
 
 ## 5. Where recordings live, the storage structure
 
-Recordings and pre-recorded lectures are stored in a structured, predictable layout in object storage, organised by where they belong in the catalogue rather than dumped in a flat pile. The structure mirrors the learning hierarchy: a program contains specializations, which contain courses, which contain modules, which contain lessons, and a lesson's video lives at a path that reflects exactly that position. This makes content addressable, auditable, and movable, and it means the storage layout is legible to a human browsing it, not an opaque heap of identifiers.
+Recordings and pre-recorded lectures are stored in a structured, predictable layout in object storage, organised by where they belong in the catalogue rather than dumped in a flat pile. ```
+     RECORDING STORAGE: mirrors where content belongs
+
+  program/
+    ai-engineering/
+      specialization/
+        agentic-ai/
+          course/
+            langgraph-fundamentals/
+              module/
+                01-state-machines/
+                  lesson/
+                    03-checkpointing/
+                      source/     original upload or
+                      |           finished live capture
+                      hls/        the quality ladder
+                      |           learners actually watch
+                      captions/
+                      thumbs/
+
+  Legible to a human browsing it, not an opaque heap
+  of identifiers. Source in cold storage, watched
+  versions in fast storage served via CDN.
+```
+
+The structure mirrors the learning hierarchy: a program contains specializations, which contain courses, which contain modules, which contain lessons, and a lesson's video lives at a path that reflects exactly that position. This makes content addressable, auditable, and movable, and it means the storage layout is legible to a human browsing it, not an opaque heap of identifiers.
 
 Original uploaded video and finished live recordings are kept as source material in one storage tier, and the processed adaptive bitrate versions that learners actually watch are kept in another, served through the content delivery network. Storage tiers are chosen by access pattern, so that frequently watched content sits in fast storage and rarely touched archival source material sits in cheaper cold storage, which keeps the storage bill proportional to what is actually used.
 
@@ -51,6 +145,39 @@ Every stored object is private by default. Nothing is world-readable. Access is 
 ## 6. The processing pipeline, what happens between upload and playback
 
 When a lecture is uploaded, or when a live session ends and its recording is ready, it does not become watchable immediately. It goes through a pipeline, run as background work so it never blocks anyone, and the platform tracks its state so the interface can honestly show a lecture as still processing rather than presenting a broken player.
+
+```
+```
+   UPLOAD OR LIVE-END  ->  WATCHABLE: the pipeline
+
+   [ uploaded file or finished live recording ]
+                    |
+                    v
+              validate file
+                    |
+                    v
+         transcode to quality ladder
+                    |
+                    v
+          segment each quality level
+                    |
+                    v
+      thumbnails, preview, captions extracted
+                    |
+                    v
+        write to correct storage path
+                    |
+                    v
+             mark lesson READY   <-- only NOW does the
+                    |                player offer it
+                    v
+          learner presses play
+
+   Runs as background work, never blocking anyone.
+   Idempotent and resumable: a failed transcode retries
+   without creating duplicates. A stuck job raises an
+   alert rather than leaving a silently missing video.
+```
 
 The pipeline validates the file, transcodes it into the ladder of quality levels, segments each level for adaptive streaming, generates thumbnails and a preview, extracts or attaches captions, writes everything to the correct storage path, and finally marks the lesson ready. Only then does the player offer it. Captions are treated as part of the deliverable, not an afterthought, because they serve learners with hearing difficulties, learners in noisy places, and learners whose first language is not the instructor's, and because searchable transcripts make video content findable in a way raw video never is.
 

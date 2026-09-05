@@ -105,6 +105,7 @@ Numbered for reading order. Every document is self-contained enough to be read o
 | 39 | `39-enterprise-partnerships-and-interview-coaching.md` | **Corporate sponsorship, employer talent pipeline, co-branded credentials, AI interview coaching, added 3 Sep 2026 via competitive gap analysis** |
 | 40 | `40-karma-streaks-and-goodies.md` | **Karma earned by verified learning, streak multiplier rewarding consistency, goodies store priced in karma** |
 | 41 | `41-video-and-streaming-architecture.md` | **Live near-live broadcast, recorded and pre-recorded video, adaptive bitrate over CDN, structured recording storage, real latency budgets** |
+| 42 | `42-end-to-end-master-flow.md` | **The single complete flow of the whole application, from stranger to graduate, naming the technology, logic and conditionals at every stage. Read this first.** |
 
 ### Decisions
 `adr/`, ADR-0001 to ADR-0018, each recording context, decision, alternatives rejected, consequences, trade-offs, cost, security, scalability, migration path and revisit trigger.
@@ -122,7 +123,7 @@ Numbered for reading order. Every document is self-contained enough to be read o
 
 **Before Day 1 (both of you, ≈60 min):** 03 → 16 → 22 → 24 → 28
 
-**New engineer joining later (≈3 hours):** 37 → 02 → 03 → 04 → 05 → 06 → 16 → 18 → 23
+**New engineer joining later (about 3 hours):** 42 first, for the whole picture in one pass, then 37, 02, 03, 04, 05, 06, 16, 18, 23 for the depth behind it
 
 **Picking this up mid-Sprint-1, right now:** 27 (what's ticketed) → 36 §11 (what's already broken and fixed) → 38 (exactly what was typed to get here)
 

@@ -20,6 +20,31 @@ A tutor that forgets everything between sessions is a worse tutor. The AI tutor 
 
 The tutor remembers, across sessions, what a learner has studied, where they have struggled, what they have asked before, their current progress and goals, and the thread of an ongoing conversation. This lets it pick up where it left off, avoid re-explaining what the learner already understands, notice recurring weak spots, and tailor its help to the individual rather than treating every session as a first meeting.
 
+```
+                    TUTOR MEMORY, THREE LAYERS
+
+  SHORT TERM          the current conversation
+  (this session)      gives immediate continuity
+                      "you just asked about recursion"
+        |
+        v
+  ACTIVITY DERIVED    read from the learner's real record
+  (always current)    progress, completions, scores
+                      "you passed the SQL assessment,
+                       you struggled with joins twice"
+        |
+        v
+  SUMMARISED          distilled history of past tutoring
+  (long term)         not every word ever exchanged
+                      "tends to confuse recursion with
+                       iteration; responds well to
+                       worked examples"
+        |
+        v
+  All three stored in OUR database, never a third party.
+  The learner can view it. The learner can clear it.
+```
+
 This memory lives in the platform's own database, never in a third-party service, which keeps it consistent with the privacy stance and keeps the learner's data under the platform's own control and protection. Memory is structured in layers. There is short-term memory, the current conversation, which gives immediate continuity. There is longer-term memory derived from the learner's actual activity, their progress, completions, and assessment results, which the tutor reads rather than having to be told. And there is a summarised memory of past tutoring interactions, distilled so that the tutor has a useful sense of the learner's history without carrying every word ever exchanged.
 
 Memory is the learner's, and the learner has rights over it. They can see what the tutor remembers, and they can have it cleared. Memory is never used to expose one learner's information to another, and it is subject to the same data-minimisation and privacy rules as everything else on the platform, described in doc 08. Sensitive personal information is kept out of the tutor's memory by the same allow-list discipline that keeps it out of logs.
@@ -27,6 +52,45 @@ Memory is the learner's, and the learner has rights over it. They can see what t
 ## 4. The AI gateway, the single controlled doorway
 
 Every use of AI on the platform passes through one gateway, and nothing calls a model directly around it. This is the chokepoint where all the controls live, and centralising them is the only way to enforce them reliably.
+
+```
+Learner asks the tutor a question
+            |
+            v
++---------------------------------------------------+
+|                  THE AI GATEWAY                   |
+|  the one doorway; nothing calls a model around it  |
++---------------------------------------------------+
+            |
+            v
+   1. Authenticate            who is this learner
+            |
+   2. Authorize               may they do this action
+            |
+   3. Budget and rate check   are they within limits
+            |
+   4. Input guardrails        strip sensitive data,
+            |                 screen for manipulation
+   5. Retrieve context        SCOPED TO THIS LEARNER
+            |                 (their entitlements filter
+            |                  the query itself)
+   6. Load memory             conversation, activity,
+            |                 summarised history
+   7. Assemble prompt         from a versioned template
+            |
+   8. Call model              timeout, retry, breaker
+            |
+   9. Validate output         expected shape, grounded,
+            |                 no leaked sensitive data
+  10. Tool authorization      checked against the
+            |                 LEARNER's permissions
+  11. Human approval gate     for high-risk actions only
+            |
+  12. Audit and cost record   every interaction logged
+            |
+            v
+      Answer reaches the learner
+```
 
 Through the gateway, in order: the learner is authenticated, their permission for the requested action is checked, their usage against budget and rate limits is checked, the input is screened by guardrails and stripped of sensitive information before it reaches a model, relevant content is retrieved with the learner's own access scope applied so the tutor can never surface content the learner is not entitled to see, the prompt is assembled from a reviewed and versioned template, the model is called through an adapter with a timeout and a retry and a circuit breaker, the output is validated against an expected shape, any tool the agent wants to use is checked against the learner's own permissions before it runs, high-risk actions wait for a human to approve them, the response is checked for anything it should not contain, and the whole interaction is recorded for audit and for cost tracking. Only then does the learner get their answer.
 
@@ -43,6 +107,24 @@ Output is checked before it reaches the learner. It is validated to be the expec
 ## 6. Tools and authority, the most important safety rule
 
 When the agent uses a tool, to look something up, to record something, to take an action, that tool runs with the learner's own authority and never with authority the learner does not have. The agent has no ambient power of its own. It carries the learner's permissions, reduced to the specific small set of tools a given task allows, and every tool call is checked against those permissions before it runs.
+
+```
+   WHY THE AGENT IS SAFE: it borrows, never owns, authority
+
+   Learner's own permissions
+            |
+            | reduced to the small set this task allows
+            v
+   Agent's effective authority  ..... always a SUBSET
+            |
+            | every tool call checked against it
+            v
+   Tool runs, or is refused
+
+   The agent has NO authority of its own. It cannot
+   exceed the learner, because it only ever carries
+   a narrowed copy of what the learner already had.
+```
 
 There are things the agent is never given: direct access to the database, the ability to run arbitrary code, access to production infrastructure, the power to move money or grant access or change prices, the power to change anyone's roles or permissions, or access to secrets. Anything genuinely consequential follows a pattern where the agent proposes, a human approves, and the system carries it out under the human's authority. The agent never holds the dangerous capability itself, even after approval.
 

@@ -4,6 +4,30 @@ The learning system is what a learner actually spends their hours inside, so it 
 
 ## 1. The shape of learning content
 
+```
+        THE SHAPE OF LEARNING CONTENT
+
+   Program
+     +-- Specialization
+           +-- Course
+                 +-- Module
+                       +-- Lesson   <-- the atom: what a
+                                        learner sits down to do
+
+   A lesson is one of several kinds:
+
+     VIDEO          live, recorded, or pre-recorded
+                    (all through ONE player)
+     READING        text, images, code
+     EXERCISE       problem with worked solution
+     QUIZ / EXAM    server-graded
+     PROJECT        submitted, evaluated, feedback
+     RESOURCE       downloadable
+
+   Each lesson knows its own completion rule:
+     watched genuinely / passed at mark / submission accepted
+```
+
 A learner enrols in something from the catalogue, and that thing has a structure: a program holds specializations, a specialization holds courses, a course holds modules, a module holds lessons. A lesson is the atom of learning, the thing a learner sits down to do, and a lesson is one of several kinds.
 
 A lesson might be a video, live or recorded or pre-recorded, all delivered the same way. It might be a reading, a text with images and code. It might be a problem-solving exercise. It might be a quiz or an assessment. It might be a project brief. It might be a downloadable resource. The learner moves through lessons in an order the course defines, and each lesson knows what it takes to be considered complete, whether that is watching a video to genuine completion, passing a quiz at a set mark, or having a project submission accepted.
@@ -13,6 +37,30 @@ Because enrolments pin to a specific published version of the catalogue item, as
 ## 2. One player for live, recorded, and pre-recorded
 
 The most important experience decision in the LMS is that all video is watched through one player, whether it is a live broadcast happening now, a recording of a live session that ended last week, or a pre-recorded lecture produced in advance. The learner does not context-switch between a live tool and a video tool. They open a lesson and it plays.
+
+```
+     ONE PLAYER, THREE KINDS OF VIDEO
+
+   LIVE NOW            RECORDING OF LIVE      PRE-RECORDED
+   broadcast +         same lesson slot,      produced in
+   live chat           chat replaced by       advance
+        |              nothing                     |
+        |                    |                     |
+        +--------------------+---------------------+
+                             |
+                             v
+                    THE SAME PLAYER
+                             |
+                             v
+              same entitlement check
+              same signed URL
+              same progress tracking
+              same completion rules
+
+   The learner never context-switches between a
+   "live tool" and a "video tool". They open a
+   lesson and it plays.
+```
 
 A live lesson shows the near-live broadcast described in doc 41, with a live chat beside it for questions and interaction. When the live session ends, its recording is processed and takes the same slot in the same course structure, so a learner who missed it opens the identical lesson and watches the recording in the identical player, losing only the live chat. A pre-recorded lecture is simply a video lesson that was never live. To the learner, and to the progress and completion machinery, these are the same thing: video in a lesson, watched in a player, generating progress as it plays.
 
@@ -28,6 +76,23 @@ The learner's current position is remembered, so they resume exactly where they 
 
 Learning has to be provable, or a certificate from it means nothing. Assessments come in several forms: quizzes with automatically graded questions, longer exams, and project submissions that a human or a rubric evaluates.
 
+```
+   WHY GRADING IS SERVER-SIDE
+
+   WRONG                          RIGHT
+   answers sent to browser        answers stay on server
+   then compared there                  |
+        |                          learner submits
+   trivially cheatable                  |
+   and impossible to walk        server compares, grades
+   back once learners notice            |
+                                  result returned
+
+   Correct answers are NEVER sent to the client
+   before submission. This is easy to get wrong with a
+   naive API and permanent once learners find it.
+```
+
 Grading of anything that decides a credential happens on the server. Correct answers are never sent to the learner's browser before they submit, because a naive design that ships the answer key to the client is trivial to cheat and impossible to walk back once learners notice. Quizzes are graded against server-held answers. Projects follow a cycle of submission, evaluation against a rubric, feedback, and where needed resubmission, until the work meets the bar or the attempts run out.
 
 This is the machinery that makes both free and paid certifications credible. A free certification is generous with access and strict with assessment precisely because the assessment is real and server-graded.
@@ -41,6 +106,29 @@ Each exercise can carry a worked solution in text, a recorded video of an instru
 ## 6. Mock interviews and resume review
 
 Career readiness is part of the product, not an afterthought, so the platform includes interview preparation and resume review as real features.
+
+```
+        MOCK INTERVIEW, TWO MODES
+
+   AI MODE                      HUMAN MODE
+   agentic tutor conducts       mentor conducts
+   the interview                the interview
+        |                             |
+        v                             v
+   structured feedback:         SAME rubric and
+   clarity, correctness,        feedback machinery
+   communication                that grades projects
+        |                             |
+        +--------------+--------------+
+                       |
+                       v
+        optionally surfaced in portfolio
+        (learner's explicit choice)
+
+   If the AI provider is down, AI mode degrades to
+   offering human mode or a clear unavailable state.
+   Nothing in the core path waits on a model.
+```
 
 Mock interviews run in two modes. In the AI mode, the learner sits a simulated interview conducted by the agentic AI tutor, behavioural or technical or system-design or domain-specific, and receives structured feedback afterward on clarity, correctness, and communication. In the human mode, a mentor conducts the interview and evaluates it through the same rubric and feedback machinery that grades projects, so a mentor-reviewed mock interview is assessed exactly like any other reviewed work rather than through a separate parallel system. When the AI provider is unavailable, AI mode degrades gracefully to offering human mode or a clear unavailable state, because nothing in the core learning path is ever allowed to hang waiting on an AI model.
 
