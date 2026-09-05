@@ -8,6 +8,26 @@ Karma turns the thing the platform most wants, consistent genuine learning, into
 
 ## 2. How karma is earned, and why it cannot be farmed
 
+```
+      WHAT EARNS KARMA, AND WHAT DOES NOT
+
+   EARNS NOTHING                 EARNS KARMA
+   opening a page                video watched genuinely
+   leaving a tab open            assessment passed
+   scrubbing to video end        project completed
+   logging in                    module / course finished
+                                 useful community help
+
+   Scaled to effort:
+     video watched      <  quiz passed
+     quiz passed        <  project completed
+     project completed  <  whole course finished
+
+   ALL awards calculated SERVER-SIDE on a verified event.
+   The client never says how much karma to grant, exactly
+   as the client never says what a product costs.
+```
+
 Karma is earned for meaningful progress, never for mere activity. This distinction is the heart of keeping it honest. Opening a page earns nothing. Leaving a video playing to an empty room earns nothing. What earns karma is genuine progress that the platform can verify: finishing a lecture with real watching, as the honest progress tracking in doc 10 measures it and not by scrubbing to the end, passing an assessment, completing a project, completing a module or a course, maintaining a learning streak, and contributing usefully to the community.
 
 The amounts are scaled to effort. A passed assessment is worth more than a watched video. A completed project is worth more than a passed quiz. Finishing a whole course is worth a real milestone amount. The exact numbers live in configuration, in the database as described in doc 05, so they can be tuned as the platform learns what motivates without a code change.
@@ -19,6 +39,26 @@ Every award is calculated and granted on the server, on a verified event, and ne
 The streak is the mechanism that makes consistency pay, and it is deliberately the most powerful lever in the system.
 
 A learner has a streak as long as they do something meaningful each day. Meaningful means the same verified progress that earns karma, so a streak cannot be kept alive by merely logging in; the learner must actually learn something, however small. Each consecutive day extends the streak.
+
+```
+   THE STREAK MULTIPLIER: where consistency actually pays
+
+   Learner A: 30 minutes every day
+   day  1  2  3  4  5  6  7 ...
+   mult 1x 1.2 1.4 1.6 1.8 2x 2.2 ... climbing to a cap
+
+   Learner B: one long binge, then nothing, then returns
+   day  1        ...gap...        8
+   mult 1x                        1x   (reset)
+
+   Same total content consumed. Learner A earns FAR more,
+   because every award was multiplied by a rising streak
+   while Learner B's stayed at the floor.
+
+   Over weeks the gap compounds enormously. That is the
+   entire point: reward showing up steadily, not
+   volume in a burst.
+```
 
 The streak applies a multiplier to the karma the learner earns. On day one the multiplier is modest. As the streak lengthens, the multiplier grows, up to a cap so it never becomes absurd. This means the same completed lesson earns a consistent daily learner substantially more karma than it earns someone returning after a long absence, because the consistent learner's multiplier is high and the returner's has reset. Over weeks, the gap compounds enormously, which is exactly the intent: the consistent learner pulls far ahead, not because they did dramatically more, but because they showed up steadily.
 
@@ -36,11 +76,54 @@ This balance, firm reset softened by earned and limited protection, is what make
 
 Accumulated karma is spent in the goodies store on physical items: merchandise and rewards the platform offers. This is where karma becomes tangible, and it is what gives the whole system a real payoff rather than a number that only ever grows.
 
+```
+   THE GOODIES STORE IS THE COMMERCE SYSTEM ALREADY BUILT
+
+   Buying with money            Redeeming with karma
+   ------------------           --------------------
+   Product (priced in INR)      Product (priced in karma)
+        |                             |
+   price resolved server-side    balance checked server-side
+        |                             |
+   payment authorised            karma ledger debited
+        |                        (atomic: locked, checked,
+        |                         debited in one step)
+        |                             |
+        +-------------+---------------+
+                      |
+                  SAME Order
+                      |
+                  SAME fulfilment path
+                      |
+              physical goodie shipped
+
+   Same audited, server-side machinery that handles money
+   handles karma. Not a second commerce system.
+```
+
 The store is not a new commerce system. As described in doc 09, a goodie is a product priced in karma instead of money, and redeeming karma for it runs through the same order and fulfilment path as any purchase, with karma as the payment method and a balance check standing in for a payment authorisation. This reuse is deliberate and it keeps the store honest and consistent: the same audited, server-side order machinery that handles money handles karma, so a goodie redemption is as carefully controlled as a purchase.
 
 Redemption is atomic. A learner's karma balance is held in a ledger, and spending it locks the balance, confirms there is enough, debits it, and creates the order in one indivisible step, so that two rapid redemptions cannot both spend the same karma. A redemption attempted without enough karma is refused cleanly. Because goodies are physical, the store handles the real-world parts: stock, so a goodie that has run out cannot be redeemed, and shipping details, collected and protected like any personal data.
 
 ## 6. The karma ledger, an honest accounting
+
+```
+   THE LEDGER: balance is the SUM, never a stored number
+
+   +5   video completed          (x1.4 streak)  =  +7
+   +20  assessment passed        (x1.4 streak)  =  +28
+   +50  project completed        (x1.6 streak)  =  +80
+   -500 redeemed: t-shirt
+   +20  assessment passed        (x1.0 reset)   =  +20
+   ...
+   ------------------------------------------------
+   balance = sum of every entry, always recomputable
+
+   Append-only, like the money and audit records. The
+   platform can always answer where karma came from and
+   where it went, and can never silently lose or
+   invent it.
+```
 
 Karma is tracked in a ledger, not as a single mutable number, and this matters for trust and for debugging. Every award and every spend is a recorded entry, with its reason and its moment, and the learner's balance is the sum of their entries. This means the platform can always answer where a learner's karma came from and where it went, can never silently lose or invent karma, and can show the learner an honest history of what they earned and spent. An append-only ledger is the same discipline the platform applies to money and to audit generally: the record of what happened is never quietly rewritten.
 

@@ -14,6 +14,40 @@ A commit that passes the pipeline produces one container image, tagged with the 
 
 ## 3. The production shape, designed for five thousand concurrent and up
 
+```
+          PRODUCTION SHAPE, SIZED FOR 5,000 CONCURRENT
+
+                    learners
+                       |
+              [ CDN + edge cache ]  <-- carries almost ALL
+                       |                bytes: video, assets
+                       |                (the heaviest load,
+                       |                 offloaded entirely)
+                [ load balancer ]
+                       |
+        +--------------+--------------+
+        |                             |
+   [ web copies ]              [ api copies ]   stateless:
+   [ x N        ]              [ x N        ]   scale by adding
+        |                             |         more copies
+        +--------------+--------------+
+                       |
+     +---------+-------+-------+----------+
+     |         |               |          |
+  managed   managed        object     background
+  Postgres   Redis         storage      workers
+  primary   cache,            |         (video,
+    +       sessions,      served       email,
+  replicas  queue,         via CDN      billing,
+     |      limits                      karma)
+  reads go
+  to replicas
+
+   The hard, stateful parts are MANAGED SERVICES on
+   purpose. Two engineers should not be hand-operating
+   failover and point-in-time recovery.
+```
+
 The application is built to run as several identical stateless copies behind a load balancer, and this is the single most important fact about how it scales. Because no copy holds any state that another copy needs, handling more learners is a matter of running more copies, and running more copies is something the platform can do automatically as load rises and undo as it falls. Five thousand concurrent learners is the starting point the system is sized for, and the same design carries to far more by adding copies, because nothing in the request path assumes a fixed number of them.
 
 State that must be shared lives in services built to be shared. The database is a managed PostgreSQL with a primary for writes and one or more read replicas for the many reads, because a learning platform reads vastly more than it writes, and catalogue and content reads can be served from replicas to keep the primary free for the writes that genuinely need it. A managed Redis carries caching, sessions, rate limiting, and the queue for background work. Object storage holds media, served through the content delivery network. None of these is something the two engineers operate by hand; they are managed services chosen precisely so that the hard parts, failover, patching, point-in-time recovery, are the provider's responsibility and not a two-person team's.
@@ -32,6 +66,22 @@ Background workers carry everything slow or scheduled: video processing, email, 
 
 ## 5. The scaling path, taken in order and only when measured
 
+```
+   THE SCALING ORDER: cheapest and highest leverage first
+
+   1. Raise CDN cache hit ratio      cheapest win, cuts
+                                     cost AND load
+   2. Add application copies         trivial, stateless
+   3. Widen Redis caching            fewer reads reach DB
+   4. Add / strengthen replicas      catalogue reads
+   5. Add worker capacity            background throughput
+   6. Partition high-volume tables   progress, analytics
+
+   Each step is taken because a DASHBOARD METRIC crossed
+   a threshold, never on a hunch. The dashboards in doc 14
+   exist partly to make these decisions on evidence.
+```
+
 Scaling is done in a deliberate order, cheapest and highest-leverage first, and each step is taken because a measurement showed it was needed, never on a hunch.
 
 First, raise the content delivery network's cache effectiveness, because a higher cache hit ratio is the cheapest possible win and directly reduces both cost and load. Second, add application copies, which is trivial because they are stateless. Third, widen caching in Redis so more reads never reach the database. Fourth, add or strengthen read replicas for catalogue and content reads. Fifth, add background worker capacity. Sixth, partition the highest-volume tables, the streams of progress and analytics events, so they stay fast as they grow. Each of these is triggered by a dashboard metric crossing a threshold, and the dashboards in doc 14 exist partly to make these decisions on evidence.
@@ -46,7 +96,52 @@ So the decision stands, and it stands for a reason that scale did not change: th
 
 ## 7. Deployment and rollback
 
+```
+   DEPLOY: one artefact, promoted unchanged
+
+   commit --> pipeline --> ONE image, tagged by commit
+                                |
+                                v
+                        deploy to DEV
+                                |
+                       promote SAME image
+                                v
+                        deploy to QA
+                                |
+                       promote SAME image
+                                v
+                       deploy to PROD
+                          |
+                          +-- migrate (old code still works
+                          |            against new schema)
+                          +-- canary: small slice of traffic
+                          +-- watch errors and latency
+                          +-- full rollout
+                          +-- smoke tests
+                          +-- watch before calling it done
+
+   Nothing is rebuilt between environments, because
+   rebuilding means shipping something you never tested.
+```
+
 Deploying is a careful sequence. The pipeline is confirmed green, QA is signed off, migrations are reviewed, and a rollback plan is stated before anything ships. Migrations are applied in a way that keeps the old code working against the new schema, so that the new and old versions can briefly coexist during a rollout, which is what makes a zero-downtime deploy and a safe rollback possible at all. A new version goes out to a small slice of traffic first, is watched for errors and latency, and only then rolls out fully. Smoke tests run against production after the deploy, and the release is watched for a period before it is considered done.
+
+```
+   ROLLBACK: three paths, two need no deploy at all
+
+   bad application code  -->  redeploy previous image
+                              minutes
+
+   bad configuration     -->  change a setting in the DB
+                              NO DEPLOY, seconds
+
+   bad feature           -->  turn the feature flag off
+                              NO DEPLOY, seconds
+
+   Two of the three fastest recoveries need no deployment.
+   That is the direct payoff of the database-driven
+   configuration decision in doc 05.
+```
 
 Rollback is fast because of how deploys are built. Bad application code is undone by redeploying the previous image, in minutes. A bad configuration is undone by changing a setting in the database, with no deploy at all, because configuration is data as described in doc 05. A bad feature is turned off with a feature flag, again with no deploy. Two of the three fastest recoveries need no deployment, which is the direct payoff of the database-driven configuration decision.
 

@@ -28,7 +28,20 @@ Browser → CDN → WAF/reverse proxy → Next.js → FastAPI → PostgreSQL
 - **RBAC + resource scoping.** Permissions are strings: `catalog.program.publish`, `commerce.refund.create`, `credential.revoke`. Roles are permission sets. Users hold roles, optionally scoped (an instructor scoped to a cohort).
 - **Exactly one policy decision point:** `security/authz.py` exposing `require_permission(...)` as a FastAPI dependency. Authorization logic appears nowhere else; CI fails the build on ad-hoc role comparisons in routers.
 - **Entitlements are checked separately from permissions.** Permissions answer "may this role perform this action type"; entitlements answer "has this user been granted this product". Both must pass for learning content.
-- **Default deny.** Every endpoint declares a permission or is explicitly `@public`. One that declares neither **fails a startup assertion**: you cannot ship an accidentally open route.
+- ```
+```
+   DEFAULT DENY: you cannot ship an accidentally open route
+
+   endpoint declared with a permission   -->  allowed, checked
+   endpoint explicitly marked public     -->  allowed, deliberate
+   endpoint declaring NEITHER            -->  FAILS AT STARTUP
+
+   The third case is the whole point. A forgotten access
+   declaration crashes the application on boot rather than
+   quietly serving private data to the world.
+```
+
+**Default deny.** Every endpoint declares a permission or is explicitly `@public`. One that declares neither **fails a startup assertion**: you cannot ship an accidentally open route.
 
 ## 4. Superuser
 

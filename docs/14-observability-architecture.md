@@ -93,6 +93,24 @@ Sampling: 100% for errors and slow requests, configurable percentage otherwise, 
 
 ## 8. Operational validation: Sprint 13, and this is the part people skip
 
+```
+   THE THREE SIGNALS, AND WHAT EACH ANSWERS
+
+   LOGS      what happened, in detail, for one request
+             "order NVL-123 failed signature verification"
+                    |
+   METRICS   how much and how often, across everything
+             "payment success rate dropped to 91%"
+                    |
+   TRACES    where the time went, across services
+             "checkout took 4s: 3.6s waiting on provider"
+
+   All three carry the SAME request id, so a metric alert
+   leads to the traces, which lead to the exact log lines.
+   That chain is what turns "something is wrong" into
+   "here is the line of code".
+```
+
 **Observability is not complete when it is configured. It is complete when a deliberately broken system produces the expected alert, log, trace and dashboard change.**
 
 The Sprint 13 exercise, executed by you:
