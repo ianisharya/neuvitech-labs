@@ -1,6 +1,18 @@
 # ADR-0013: Kubernetes Deferred; Container Platform + Managed PostgreSQL
 
-**Status:** Accepted · **Date:** Sprint 11
+**Status:** SUPERSEDED by ADR-0019 on 2026-09-06.
+**Original date:** Sprint 11
+
+> This decision is no longer in force. It deferred Kubernetes on the basis of a
+> concurrency target that has since been revised from 5,000 to 100,000. The
+> premises this ADR relied upon, a single stateless application scaling as one
+> unit with heavy state on managed services, do not hold at the revised target.
+> ADR-0019 records the decision to adopt Kubernetes and the reasoning for the
+> reversal.
+>
+> This document is retained unedited below because the original reasoning
+> remains readable and correct for the scale it addressed. It is retained as
+> record, not as guidance. Do not implement from this document.
 
 ## Context
 
