@@ -21,9 +21,12 @@ Before the flow itself, here is what runs where. Nothing in this document uses a
 | Background work | ARQ workers, sharing the API codebase | Video processing, email, certificates, billing cycles, karma, reconciliation |
 | Object storage | S3-compatible storage, private by default | Source video, processed video, documents, uploads |
 | Payments | Razorpay behind a provider protocol | Subscription billing and one-time purchase |
-| AI | Open-source models, LangChain and LangGraph, all behind one gateway | The tutor, mock interviews, resume review, learning paths |
+| AI models | Ollama for local and self-hosted inference, hosted APIs available behind the same interface | The tutor, mock interviews, resume review, learning paths, selected by configuration, not code |
+| AI orchestration | A single gateway, graph-structured orchestration for multi-step tasks | Every model call, every tool call, every memory access passes through it |
+| Tool integration | Model Context Protocol, both inbound and outbound | Platform exposes tools to external clients; the tutor acquires tools from MCP servers |
+| Deployment substrate | Kubernetes, standard primitives only | Runs every workload class, scales each independently, restarts failed work |
 | Observability | OpenTelemetry to Prometheus, Loki, Tempo, Grafana, and GlitchTip | Metrics, logs, traces, dashboards, alerts, errors |
-| Environment | Docker, VS Code Dev Containers | An identical development environment on every machine |
+| Environment | Docker, VS Code Dev Containers, profile-based local composition | An identical toolchain on every machine, without requiring the full stack locally |
 | Pipeline | GitHub Actions | Lint, type-check, test, build once, promote through environments |
 
 ## 2. The whole journey in one picture
@@ -581,7 +584,7 @@ Spending karma reuses the commerce system entirely. A goodie is a product priced
 
 ## 13. The AI tutor, available throughout
 
-At any point above, the learner can ask the tutor for help. Every such request takes one path.
+At any point above, the learner can ask the tutor for help. Every such request takes one path, and the model doing the work is a configuration value, not a code dependency.
 
 ```
    THE AI GATEWAY, THE ONLY DOORWAY
@@ -608,16 +611,47 @@ At any point above, the learner can ask the tutor for help. Every such request t
    assemble prompt from a versioned template
         |
         v
-   call an open-source model, with timeout, retry,
-   and a circuit breaker
+   resolve the model PROVIDER from configuration
+        |     Ollama, self-hosted, or a hosted API,
+        |     all behind the same interface
+        v
+   call the model, with timeout, retry, and a
+   circuit breaker
         |
+        v
+   does this step require a TOOL the model does not
+   have natively?
+        |
+   +----+----+
+   |         |
+   no        yes
+   |         |
+   |         v
+   |    is the tool defined locally, or does it come
+   |    from an MCP server?
+   |         |
+   |    +----+----+
+   |    |         |
+   |  local      MCP
+   |    |         |
+   |    |         v
+   |    |    connect to an ALLOW-LISTED server only
+   |    |         |
+   |    |         v
+   |    |    the server's tool descriptions and
+   |    |    results are DATA, never instructions
+   |    |         |
+   |    +----+----+
+   |         v
+   |    authorize the tool call against the
+   |    LEARNER's permissions, reduced to this task
+   |    never the agent's own authority, regardless
+   |    of whether the tool is local or remote
+   |         |
+   +----+----+
         v
    validate output: expected shape, grounded in the
    retrieved material, no leaked sensitive data
-        |
-        v
-   any tool call checked against the LEARNER's
-   permissions, never the agent's own
         |
         v
    audit and cost recorded
@@ -631,7 +665,62 @@ At any point above, the learner can ask the tutor for help. Every such request t
    the core learning or commerce path waits on a model.
 ```
 
-## 14. Career, the far end of the journey
+## 14. An external application using the platform through MCP
+
+The tutor consuming tools is one direction. The platform also exposes its own capabilities to external applications through the same protocol, so an IDE, an AI assistant, or a partner application can query the platform without a bespoke integration.
+
+```
+   MCP SERVER ROLE, THE PLATFORM AS THE PROVIDER
+
+   external client connects
+   (an AI assistant, an IDE, a partner application)
+        |
+        v
+   authenticate the CLIENT, using credentials issued
+   and revocable per client registration
+        |
+        v
+   client discovers available tools and their schemas
+        |
+        v
+   client invokes a tool, for example a catalogue
+   search or a credential verification
+        |
+        v
+   arguments validated against the tool's declared
+   schema
+        |
+        v
+   authorize: does this tool declare a required
+   permission, and does the effective principal hold it
+        |
+   a tool declaring NEITHER a permission nor an
+   explicit public marker cannot exist; the
+   application would not have started
+        |
+        v
+   the tool handler calls the IDENTICAL service layer
+   an HTTP route would call
+        |     never the database directly; the same
+        |     business rules and audit apply regardless
+        |     of which transport reached them
+        v
+   result validated against the declared output schema
+        |
+        v
+   invocation logged: client identity, tool, an
+   argument digest, and the outcome
+        |
+        v
+   result returned to the external client
+
+   Capabilities available for administrative
+   mutation, commerce, or anything that moves money
+   or grants access are not exposed through this
+   surface.
+```
+
+## 15. Career, the far end of the journey
 
 ```
    FROM CREDENTIAL TO EMPLOYER
@@ -661,7 +750,7 @@ At any point above, the learner can ask the tutor for help. Every such request t
    learner responds, or does not
 ```
 
-## 15. What happens when things fail
+## 16. What happens when things fail
 
 The platform is built so that a failure in one place degrades one capability rather than stopping the product.
 
@@ -685,23 +774,35 @@ The platform is built so that a failure in one place degrades one capability rat
    Email provider      queued with retry; nothing blocks
    down                on delivery
 
-   AI provider down    tutor unavailable, mock interviews
-                       offer human mode, everything else
+   Model inference     tutor unavailable, mock interviews
+   down                offer human mode, everything else
                        unaffected
 
-   Read replica down   reads fall back to the primary,
-                       slower but correct
+   An MCP server       the affected tools are unavailable;
+   unreachable         the agent proceeds without them or
+   (client role)       reports the limitation; nothing
+                       else is affected
 
-   Primary DB down     the platform is down. This is the
-                       one dependency with no graceful
-                       degradation, which is why it is a
-                       managed service with point-in-time
-                       recovery and a rehearsed restore
+   A pod, or a whole    Kubernetes reschedules the failed
+   node, fails          work onto healthy capacity; the
+                        request-serving classes have more
+                        than one replica specifically so
+                        that one failure is invisible to
+                        learners
+
+   Read replica down    reads fall back to the primary,
+                        slower but correct
+
+   Primary database     the platform is down. This is the
+   unavailable          one dependency with no graceful
+                        degradation, which is why it runs
+                        with replication, point-in-time
+                        recovery, and a rehearsed restore
 ```
 
-## 16. How a change reaches production
+## 17. How a change reaches production
 
-The same discipline applies to shipping the code that runs all of the above.
+The same discipline applies to shipping the code that runs all of the above, and the target it ships to is a Kubernetes cluster.
 
 ```
    COMMIT TO PRODUCTION
@@ -716,42 +817,57 @@ The same discipline applies to shipping the code that runs all of the above.
         |
         any failure --> merge blocked
         v
-   pull request reviewed by the other track
+   pull request reviewed by a second engineer
         |
         v
-   ONE image built, tagged with the commit
+   ONE image built, tagged with the commit, scanned
+   for known vulnerabilities before it is allowed
+   to be promoted anywhere
         |
         v
-   deploy to DEV --------+
-        |                | the SAME image
-   promote to QA --------+ is promoted, never
-        |                | rebuilt, because a
-   promote to PROD ------+ rebuild means shipping
-        |                  something you never tested
+   deploy to development --------+
+        |                        | the SAME image
+   promote to staging ----------+ is promoted, never
+        |                        | rebuilt, because a
+   promote to production --------+ rebuild means shipping
+        |                          something you never tested
         v
    migrate (expand phase only, so the previous
-   image still works against the new schema)
+   image still works against the new schema, which is
+   what makes the next step safe)
         |
         v
-   canary: a small slice of traffic first
+   Kubernetes rolling update: new pods created
+   alongside old ones
         |
         v
-   health checks and error rate watched
+   canary: traffic to a limited proportion of pods
+        |
+        v
+   health checks, error rate, and resource saturation
+   watched against the new pods specifically
         |
    +----+----+
    |         |
   bad       good
    |         |
    |         v
-   |    full rollout, smoke tests, watched period
+   |    old pods scaled down, new pods take over
+   |    fully, smoke tests run, watched period
    |
    +--> ROLLBACK
-        bad code    -> redeploy previous image, minutes
+        bad code    -> Kubernetes reverts to the
+                       previous image, minutes
         bad config  -> change a setting, NO DEPLOY
         bad feature -> flip a feature flag, NO DEPLOY
+
+   Each workload class, request handling, workers,
+   media processing, inference, deploys and rolls back
+   independently. A bad change to one class does not
+   require redeploying the others.
 ```
 
-## 17. The five rules that explain most of the design
+## 18. The six rules that explain most of the design
 
 If you remember nothing else from this document, remember these, because almost every decision above follows from one of them.
 
@@ -764,3 +880,5 @@ Access is default-deny, enforced at startup. An endpoint that declares neither a
 Nothing a non-engineer might change is hard-coded. Configuration, branding, navigation, pricing rules, feature flags, and karma values all live in the database, which is why two of the three fastest production rollbacks require no deployment at all.
 
 The catalogue is data, not code. A new kind of product is a row in a registry, which is why none of the flows above branch on what kind of thing is being sold, learned, or certified.
+
+Business logic depends on interfaces, never on a specific provider. The model behind the tutor, the payment processor behind checkout, and the storage behind a video are each accessed through an interface the domain defines. Substituting one implementation for another, moving from local inference to a hosted model, or from one payment processor to another, is a configuration change, because the code that calls them was never written against a specific provider in the first place.
