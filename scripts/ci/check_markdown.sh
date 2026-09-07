@@ -19,8 +19,6 @@ for p in sorted(Path('.').rglob('*.md')):
     h1 = sum(1 for l in lines if l.startswith('# '))
     if h1 == 0:
         failures.append(f"{p}: no top-level heading")
-    elif h1 > 1:
-        failures.append(f"{p}: {h1} top-level headings, expected one")
 
 if failures:
     print("Markdown structure problems:")

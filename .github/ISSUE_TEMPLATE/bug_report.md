@@ -4,6 +4,8 @@ about: Something behaves incorrectly
 labels: bug
 ---
 
+# Bug Report
+
 ## What happened
 
 Ticket, if there is one:
