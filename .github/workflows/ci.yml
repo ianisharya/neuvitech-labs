@@ -57,6 +57,14 @@ jobs:
   secrets:
     name: Secret detection
     runs-on: ubuntu-24.04
+    # gitleaks-action calls the GitHub REST API to list commits on the pull
+    # request, to determine the incremental scan boundary. The workflow-level
+    # default of contents: read does not cover that call, and the API returns
+    # a 403 naming pull_requests=read as the required scope. Granted here,
+    # only to this job, so the other jobs keep the minimal default.
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
