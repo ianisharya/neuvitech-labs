@@ -1,0 +1,406 @@
+# Continuous integration.
+#
+# The repository currently contains documentation, configuration, and scripts.
+# Application code and Kubernetes manifests arrive in later sprints. Rather
+# than defer the pipeline until then, or write jobs that pass by doing nothing,
+# each job detects whether its subject exists and either runs or skips with an
+# explicit statement of what it is waiting for.
+#
+# The consequence is that this file does not change when application code
+# lands. The jobs activate on their own. A pipeline that must be rewritten to
+# begin working is a pipeline that will be rewritten late.
+#
+# Every action is pinned to a commit digest. A version tag is mutable and the
+# code behind it can change without the reference changing, which is a
+# supply-chain exposure that pinning closes.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+
+  # ---------------------------------------------------------------------------
+  # Documentation standards. The documentation set is the specification for the
+  # system, so its standards are enforced rather than trusted to review.
+  # ---------------------------------------------------------------------------
+  documentation:
+    name: Documentation standards
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Prose standards
+        run: bash scripts/ci/check_prose.sh
+
+      - name: Markdown structure
+        run: bash scripts/ci/check_markdown.sh
+
+      - name: Architecture decision record consistency
+        run: bash scripts/ci/check_adrs.sh
+
+  # ---------------------------------------------------------------------------
+  # Secrets. Full history is scanned, because a secret introduced in an earlier
+  # commit and not yet detected remains exposed regardless of when it entered.
+  # ---------------------------------------------------------------------------
+  secrets:
+    name: Secret detection
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@83373cf2f8c4db6e24b41c1a9b086bb9619e9cd3 # v2.3.9
+        env:
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+          GITLEAKS_ENABLE_SUMMARY: "true"
+
+  # ---------------------------------------------------------------------------
+  # Repository hygiene.
+  # ---------------------------------------------------------------------------
+  hygiene:
+    name: Repository hygiene
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: File size limits
+        run: bash scripts/ci/check_file_sizes.sh
+
+      - name: Environment file handling
+        run: bash scripts/ci/check_env_handling.sh
+
+  # ---------------------------------------------------------------------------
+  # Architectural guardrails. Enforces the constraints recorded in the
+  # architecture documents: configuration access, catalogue type branching,
+  # layering, and the provider abstraction boundary.
+  # ---------------------------------------------------------------------------
+  guardrails:
+    name: Architectural guardrails
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Guardrail checks
+        run: |
+          if [ ! -d apps ]; then
+            echo "No application code present. Guardrail enforcement begins"
+            echo "when apps/ is created."
+            exit 0
+          fi
+          if [ ! -f scripts/check_guardrails.py ]; then
+            echo "::error::apps/ exists but scripts/check_guardrails.py is absent."
+            echo "The guardrail script must be present once application code exists."
+            exit 1
+          fi
+          python scripts/check_guardrails.py apps/
+
+  # ---------------------------------------------------------------------------
+  # Python. Activates when the backend exists.
+  # ---------------------------------------------------------------------------
+  python:
+    name: Python lint, format, types
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Detect backend
+        id: detect
+        run: |
+          if [ -f apps/api/pyproject.toml ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "apps/api absent. This job activates when the backend is created."
+          fi
+
+      - uses: astral-sh/setup-uv@887a942a15af3a7626099df99e897a18d9e5ab3a # v5.1.0
+        if: steps.detect.outputs.present == 'true'
+        with:
+          version: "0.5.11"
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        if: steps.detect.outputs.present == 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        if: steps.detect.outputs.present == 'true'
+        working-directory: apps/api
+        run: uv sync --frozen
+
+      - name: Lint
+        if: steps.detect.outputs.present == 'true'
+        working-directory: apps/api
+        run: uv run ruff check .
+
+      - name: Format
+        if: steps.detect.outputs.present == 'true'
+        working-directory: apps/api
+        run: uv run ruff format --check .
+
+      - name: Types
+        if: steps.detect.outputs.present == 'true'
+        working-directory: apps/api
+        run: uv run mypy .
+
+      - name: Module boundary enforcement
+        if: steps.detect.outputs.present == 'true'
+        working-directory: apps/api
+        run: |
+          # Bounded contexts must not import each other's internals. This is
+          # what makes the modular monolith modular rather than merely
+          # co-located, per the system architecture document.
+          if [ -f .importlinter ] || grep -q "importlinter" pyproject.toml 2>/dev/null; then
+            uv run lint-imports
+          else
+            echo "::error::Module boundary configuration is absent. The"
+            echo "architecture requires enforced context boundaries."
+            exit 1
+          fi
+
+  # ---------------------------------------------------------------------------
+  # Web. Activates when the presentation application exists.
+  # ---------------------------------------------------------------------------
+  web:
+    name: Web lint, format, types
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Detect web application
+        id: detect
+        run: |
+          if [ -f apps/web/package.json ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "apps/web absent. This job activates when the web application is created."
+          fi
+
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        if: steps.detect.outputs.present == 'true'
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install
+        if: steps.detect.outputs.present == 'true'
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Lint
+        if: steps.detect.outputs.present == 'true'
+        working-directory: apps/web
+        run: npm run lint
+
+      - name: Format
+        if: steps.detect.outputs.present == 'true'
+        working-directory: apps/web
+        run: npm run format:check
+
+      - name: Types
+        if: steps.detect.outputs.present == 'true'
+        working-directory: apps/web
+        run: npm run typecheck
+
+  # ---------------------------------------------------------------------------
+  # Tests. Runs against real PostgreSQL and Redis, because the data layer
+  # depends on behaviour those engines provide and an in-memory substitute
+  # would not exercise it.
+  #
+  # Provider interfaces use their in-memory implementations here, per the
+  # provider abstraction decision, so tests require no network and no model.
+  # ---------------------------------------------------------------------------
+  tests:
+    name: Tests
+    runs-on: ubuntu-24.04
+
+    services:
+      postgres:
+        image: postgres@sha256:fe3f571d128e8efadcd8b2fde0e2b73ebab6dbec33f6bfe69d98c682c7d8f7bd
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd "pg_isready -U test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis@sha256:eaea8264f74a95ea9a0767c794da50788cbd9cf5223951674d491fa1b3f4f2d2
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Detect test suite
+        id: detect
+        run: |
+          if [ -d apps/api/tests ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "No test suite present. This job activates when tests exist."
+          fi
+
+      - uses: astral-sh/setup-uv@887a942a15af3a7626099df99e897a18d9e5ab3a # v5.1.0
+        if: steps.detect.outputs.present == 'true'
+        with:
+          version: "0.5.11"
+
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        if: steps.detect.outputs.present == 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        if: steps.detect.outputs.present == 'true'
+        working-directory: apps/api
+        run: uv sync --frozen
+
+      - name: Migrations apply and reverse
+        if: steps.detect.outputs.present == 'true'
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test
+        run: |
+          # A migration that cannot be reversed is a deployment that cannot be
+          # rolled back. Both directions are exercised.
+          uv run alembic upgrade head
+          uv run alembic downgrade base
+          uv run alembic upgrade head
+
+      - name: Test suite
+        if: steps.detect.outputs.present == 'true'
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql+asyncpg://test:test@localhost:5432/test
+          REDIS_URL: redis://localhost:6379/0
+        run: uv run pytest --cov --cov-report=term-missing
+
+  # ---------------------------------------------------------------------------
+  # Kubernetes manifests. Activates when manifests exist. Validates structure
+  # and enforces the pod security requirements recorded in ADR-0019.
+  # ---------------------------------------------------------------------------
+  manifests:
+    name: Kubernetes manifests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Detect manifests
+        id: detect
+        run: |
+          if [ -d infrastructure/kubernetes ] || [ -d deploy ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "No Kubernetes manifests present. This job activates when they exist."
+          fi
+
+      - name: Schema validation
+        if: steps.detect.outputs.present == 'true'
+        run: bash scripts/ci/check_manifests.sh
+
+      - name: Pod security requirements
+        if: steps.detect.outputs.present == 'true'
+        run: bash scripts/ci/check_pod_security.sh
+
+  # ---------------------------------------------------------------------------
+  # Container image. Built and scanned on every run once a Dockerfile exists,
+  # because an image that has not been scanned must not be promotable.
+  # ---------------------------------------------------------------------------
+  image:
+    name: Container image build and scan
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Detect Dockerfile
+        id: detect
+        run: |
+          if [ -f infrastructure/docker/api.Dockerfile ] || [ -f Dockerfile ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "No production Dockerfile present. This job activates when one exists."
+          fi
+
+      - name: Build
+        if: steps.detect.outputs.present == 'true'
+        run: |
+          DF=infrastructure/docker/api.Dockerfile
+          [ -f "$DF" ] || DF=Dockerfile
+          docker build -f "$DF" -t ci-image:${{ github.sha }} .
+
+      - name: Vulnerability scan
+        if: steps.detect.outputs.present == 'true'
+        uses: aquasecurity/trivy-action@18f2510ee396bbf400402947b394f2dd8c87dbb0 # v0.29.0
+        with:
+          image-ref: ci-image:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+
+  # ---------------------------------------------------------------------------
+  # Aggregate gate. Branch protection requires this single check.
+  #
+  # The list of jobs feeding it is maintained here rather than in repository
+  # settings. Adding a job therefore does not require a settings change, and a
+  # renamed job cannot silently drop out of the required set.
+  # ---------------------------------------------------------------------------
+  ci-passed:
+    name: CI passed
+    runs-on: ubuntu-24.04
+    if: always()
+    needs:
+      - documentation
+      - secrets
+      - hygiene
+      - guardrails
+      - python
+      - web
+      - tests
+      - manifests
+      - image
+    steps:
+      - name: Evaluate
+        run: |
+          if [ "${{ contains(needs.*.result, 'failure') }}" = "true" ]; then
+            echo "::error::One or more jobs failed."
+            exit 1
+          fi
+          if [ "${{ contains(needs.*.result, 'cancelled') }}" = "true" ]; then
+            echo "::error::One or more jobs were cancelled."
+            exit 1
+          fi
+          echo "All jobs passed."
