@@ -1,8 +1,8 @@
 # 27: Jira Backlog: Epic → Story → Task → Subtask
 
-> **STATUS: SPECIFIED, NOT CREATED IN JIRA.** `neuvitech-labs.atlassian.net` is unreachable from my environment. I have created nothing. `NVL-*` keys are proposed identifiers.
+> **STATUS: THIS FILE IS THE SYSTEM OF RECORD.** Earlier in this project, live tickets existed in Jira under project key NVL, created and updated through the Atlassian connector. Jira is no longer used for this project. No ticket sync happens, and no external system is checked against this file.
 >
-> **To make these real:** connect the Atlassian MCP connector (I create them and report exactly what was created), or import `jira-import-epics.csv` and `jira-import-sprint-01.csv`.
+> Every `NVL-E0x` epic and `NVL-1xx` to `NVL-2xx` task below is an internal reference identifier, kept for continuity with prior work and with the rest of this documentation set, which cites these identifiers throughout. Update this file directly when scope, status, or sprint assignment changes. There is nothing else to reconcile it against.
 
 **Point scale: 1 point = 1 hour of one person's time**, including review, running, testing and rework.
 
@@ -13,7 +13,7 @@
 | Key | Epic | Sprints | Pts |
 |---|---|---|---|
 | NVL-E01 | Development Environment & Repository Foundation | 1 | 32 |
-| NVL-E02 | Platform Skeleton & Data Layer | 2 | 32 |
+| NVL-E02 | Platform Skeleton & Data Layer | 2 | 40 |
 | NVL-E03 | Identity, Authorization & Security | 3 | 38 |
 | NVL-E04 | Runtime Configuration & Content System | 4 | 20 |
 | NVL-E05 | Observability Foundation | 4 | 18 |
@@ -25,7 +25,7 @@
 | NVL-E11 | Assessments, Projects & Free Certifications | 9 | 42 |
 | NVL-E12 | Certificates, Brochures & Portfolio | 10 | 42 |
 | NVL-E13 | Live Learning & Subscriptions | 11 | 26 |
-| NVL-E14 | Cloud Infrastructure & Deployment | 11–12 | 40 |
+| NVL-E14 | **Kubernetes Production Infrastructure** *(k3s, hardens the Sprint 2 dev cluster, ADR-0019, supersedes ADR-0013)* | 11–12 | 44 |
 | NVL-E15 | Admin Console & Analytics | 12 | 22 |
 | NVL-E16 | Hardening: Security, Performance & Observability Validation | 13 | 38 |
 | NVL-E17 | Production Launch & Post-Deployment Observation | 14 | 38 |
@@ -36,6 +36,13 @@
 | NVL-E22 | Agentic AI Capabilities | 19 | 40 |
 | NVL-E23 | ITES, Scale & v2 Release | 20 | 40 |
 | NVL-E24 | **Enterprise: Corporate Sponsorship & Employer Talent Pipeline** *(added ADR-0015)* | 21 | 40 |
+| ~~NVL-E25~~ | reserved, retired during renumbering, not a missing epic | | |
+| NVL-E26 | **Model Context Protocol: server and client roles** *(added ADR-0020)* | 18 | 6 |
+| ~~NVL-E27~~ | reserved, retired; provider abstraction work is tracked under NVL-E02 instead (NVL-213), not a separate epic | | |
+| ~~NVL-E28~~ | reserved, retired; constrained local development work is tracked under NVL-E02 instead (NVL-214), not a separate epic | | |
+| NVL-E29 | **Video pipeline and near-live streaming at scale** *(docs 41, ADR-0017)* | 22 | 40 |
+| NVL-E30 | **Problem-solving platform and AI tutor memory** *(docs 10, 12, ADR-0018)* | 23 | 40 |
+| NVL-E31 | **Karma, streaks and goodies store** *(doc 40)* | 24 | 40 |
 | NVL-EXT | External Dependencies & Accounts | 2–17 | 14 |
 
 ---
@@ -141,7 +148,7 @@
 
 ---
 
-# EPIC NVL-E02: Platform Skeleton & Data Layer · Sprint 2 · 32 pts
+# EPIC NVL-E02: Platform Skeleton & Data Layer · Sprint 2 · 40 pts
 
 **Goal:** API and web boot, settings load **from the database**, migrations run, logging and tracing emit, health endpoints report truthfully, and the whole thing deploys to DEV.
 
@@ -161,6 +168,9 @@
 | NVL-EXT-01 | **Start Razorpay merchant KYC** | ME | 2 | **Longest lead time in the programme, start now** |
 | NVL-EXT-02 | Start email sending-domain verification | ME | 1 | SPF/DKIM records added |
 | NVL-EXT-03 | Register `neuvitechlabs.com`, configure DNS + Cloudflare | ME | 2 | Nameservers changed |
+| NVL-212 | Local Kubernetes cluster (k3d), DEV namespace, deploy the Sprint 2 skeleton onto it | AI+ME | 3 | replaces a plain Docker Compose DEV deploy; production hardening of the same cluster shape happens at Sprint 11, ADR-0019 |
+| NVL-213 | Provider interfaces: `LanguageModel`, `EmbeddingModel`, `VectorStore` protocols, Ollama implementation, in-memory test doubles | AI+ME | 3 | interfaces modelled on domain need, not on Ollama's own API shape; test suite exercises the in-memory implementation, not the network, ADR-0021 |
+| NVL-214 | Profile-based local development: minimal, web, full-local, AI, observability, Kubernetes profiles in Compose | AI+ME | 2 | routine tasks start few services; readiness endpoint reports which optional dependency is absent, ADR-0022 |
 
 ---
 
@@ -183,12 +193,15 @@
 
 ---
 
-## Sprints 4–21: epic summary
+## Sprints 1–24: epic summary
 
 Full story-level breakdown is produced at each sprint planning session, when it reflects what was actually built rather than a guess made months earlier. Epics, goals, points and key risks are fixed now.
 
 | Sprint | Epic(s) | Focus | Highest-risk item |
 |---|---|---|---|
+| 1 | E01 | Dev Container, repository governance, first CI pipeline green | Toolchain must be byte-identical across both development machines, or the cross-platform guarantee fails at the first sprint |
+| 2 | E02 | API and web boot; settings from database; Postgres, Redis, migrations, logging, errors, health; DEV deploy on a Kubernetes cluster; provider interfaces with Ollama and in-memory test doubles; profile-based local development | Kubernetes, provider abstraction, and local development tooling are all established at once, on a repository with no application code yet, ADR-0019, ADR-0021, ADR-0022 |
+| 3 | E03 | Argon2id, sessions, MFA, RBAC, audit, rate limiting, security scanning in CI | Default-deny must fail at startup for an endpoint declaring neither a permission nor an explicit public marker, not at runtime |
 | 4 | E04, E05 | Settings admin UI, content/navigation tables, feature flags, OTel → Grafana, GlitchTip | First trace end to end |
 | 5 | E06, E07 | Type registry, versioning, relationships, publish + outbox; design tokens; restyle components | Publish pipeline correctness |
 | 6 | E08 | Public catalog, read model, caching, FTS, SEO, JSON-LD, sitemap, Core Web Vitals | Cache invalidation correctness |
@@ -196,17 +209,20 @@ Full story-level breakdown is produced at each sprint planning session, when it 
 | 8 | E10 | Learning components, progress, video pipeline, signed URLs, player | Video cost and CDN hit ratio |
 | 9 | E11 | Assessment engine, submissions, grading, free certification path | Server-side grading integrity |
 | 10 | E12 | Credential lifecycle, Ed25519 signing, verification page, brochure generation · **track swap** | Idempotent issuance under retry |
-| 11 | E13, E14 | Cohorts, Zoom, attendance, subscriptions; **provision cloud infrastructure** | Zoom integration; first cloud provisioning |
+| 11 | E13, E14 | Cohorts, Zoom, attendance, subscriptions; **harden the Sprint 2 Kubernetes cluster for production**: workload classes, HPA, network policies, pod security, on-cluster stateful services, ingress, TLS, CDN | Zoom integration; first production-grade cluster, not first cloud provisioning, ADR-0019 |
 | 12 | E14, E15 | Admin console, analytics, investor metrics; **pipeline proven to PROD** | First production deploy |
 | 13 | E16 | Load testing (k6), DAST (ZAP), pen-testing, **failure-injection validation of all 10 alert scenarios** | Discovering an alert never worked |
 | 14 | E17 | **UAT, production deployment, 72-hour observation, DR rehearsal** | Real users, real money |
 | 15 | E18 | Subscription billing hardening, tax, invoicing, refunds (no EMI, removed per ADR-0016) | Renewal, proration and grace-period correctness |
 | 16 | E19 | Jobs, applications, resumes, screening | File security |
 | 17 | E20 | Articles, events, showcases, profiles, moderation | Content moderation policy |
-| 18 | E21 | AI gateway, guardrails, pgvector, hybrid retrieval, budgets, AI observability | Prompt injection defence |
+| 18 | E21, E26 | AI gateway, guardrails, pgvector, hybrid retrieval, budgets, AI observability; **MCP server and client roles** | Prompt injection defence; MCP tool descriptions and results treated as untrusted data, ADR-0020 |
 | 19 | E22 | Agent identities, tool authorization, human-approval gates, evals | Tool authorization correctness |
-| 20 | E23 | ITES surfaces, scale tuning, DR re-rehearsal, v2 release |, |
-| 21 | E24 | Organisation entity, corporate sponsorship commerce, opt-in employer talent pipeline | Enterprise sales motion differs from B2C, see `docs/31` new risk entry |
+| 20 | E23 | ITES surfaces, scale tuning, DR re-rehearsal, v2 release | Scale tuning now validates against the Kubernetes autoscaling model from Sprint 11 rather than a from-scratch scale-up |
+| 21 | E24 | Organisation entity, corporate sponsorship commerce, opt-in employer talent pipeline | Enterprise sales motion differs from B2C, see `docs/31` risk entry R28 |
+| 22 | E29 | Video pipeline and near-live streaming at scale: adaptive bitrate, CDN delivery, live broadcast plus recording, processing pipeline | Video bandwidth is the dominant variable cost, see `docs/31` risk entry R29, ADR-0017 |
+| 23 | E30 | Problem-solving platform and AI tutor memory: exercises with solutions, AI-tutor chat help, persistent tutor memory | No in-browser code execution by design; memory holds sensitive learner data, see `docs/31` risk entry R31, ADR-0018 |
+| 24 | E31 | Karma, streaks and goodies store: verified-event karma, streak multiplier, karma-priced goodies through existing commerce | Karma awarded only on server-verified events, never client-claimed |
 
 ---
 
