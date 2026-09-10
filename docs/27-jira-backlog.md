@@ -13,7 +13,7 @@
 | Key | Epic | Sprints | Pts |
 |---|---|---|---|
 | NVL-E01 | Development Environment & Repository Foundation | 1 | 32 |
-| NVL-E02 | Platform Skeleton & Data Layer | 2 | 40 |
+| NVL-E02 | Platform Skeleton & Data Layer | 2 | 53 |
 | NVL-E03 | Identity, Authorization & Security | 3 | 38 |
 | NVL-E04 | Runtime Configuration & Content System | 4 | 20 |
 | NVL-E05 | Observability Foundation | 4 | 18 |
@@ -148,9 +148,11 @@
 
 ---
 
-# EPIC NVL-E02: Platform Skeleton & Data Layer · Sprint 2 · 40 pts
+# EPIC NVL-E02: Platform Skeleton & Data Layer · Sprint 2 · 53 pts
 
 **Goal:** API and web boot, settings load **from the database**, migrations run, logging and tracing emit, health endpoints report truthfully, and the whole thing deploys to DEV.
+
+**Points note:** this epic originally totalled 40 points, set before NVL-212 through NVL-214 (Kubernetes, provider interfaces, local development profiles) existed as separate tickets. The stated total was never recalculated when those three were added. 53 is the correct sum of every ticket in the table below. This has not been re-baselined against actual capacity; see the note after the table.
 
 | Story | Title | Owner | Pts | Key subtasks |
 |---|---|---|---|---|
@@ -165,12 +167,15 @@
 | NVL-209 | Next.js skeleton + API client + SSR status page | AI+TM | 4 | TypeScript strict, error/loading boundaries, degraded state |
 | NVL-210 | Test harness + full CI gate chain | AI+TM | 4 | pytest async fixtures, DB-per-test, coverage gates, service containers |
 | NVL-211 | **DEV deployment: build once, tag by SHA, deploy, smoke test** | AI+TM | 4 | rollback procedure documented and **rehearsed once** |
-| NVL-EXT-01 | **Start Razorpay merchant KYC** | ME | 2 | **Longest lead time in the programme, start now** |
 | NVL-EXT-02 | Start email sending-domain verification | ME | 1 | SPF/DKIM records added |
 | NVL-EXT-03 | Register `neuvitechlabs.com`, configure DNS + Cloudflare | ME | 2 | Nameservers changed |
 | NVL-212 | Local Kubernetes cluster (k3d), DEV namespace, deploy the Sprint 2 skeleton onto it | AI+ME | 3 | replaces a plain Docker Compose DEV deploy; production hardening of the same cluster shape happens at Sprint 11, ADR-0019 |
 | NVL-213 | Provider interfaces: `LanguageModel`, `EmbeddingModel`, `VectorStore` protocols, Ollama implementation, in-memory test doubles | AI+ME | 3 | interfaces modelled on domain need, not on Ollama's own API shape; test suite exercises the in-memory implementation, not the network, ADR-0021 |
 | NVL-214 | Profile-based local development: minimal, web, full-local, AI, observability, Kubernetes profiles in Compose | AI+ME | 2 | routine tasks start few services; readiness endpoint reports which optional dependency is absent, ADR-0022 |
+
+**NVL-EXT-01, Razorpay merchant KYC, is not in this epic.** It was originally listed here with a note that its lead time meant it should start immediately. That has been superseded: the application was deliberately deferred to Sprint 5, a decision made and recorded earlier in this project. It is now tracked under Sprint 5 below, not here.
+
+**Capacity note, not yet resolved:** 53 points was sized assuming the two-engineer capacity this plan originally committed to. The operating team is now one person. This epic has not been re-estimated or re-scoped against that reality, and doing so before Sprint 2 begins is a real, outstanding task, not a formality. See `docs/24`, capacity model, and `docs/31`, risk register, R32.
 
 ---
 
@@ -203,7 +208,7 @@ Full story-level breakdown is produced at each sprint planning session, when it 
 | 2 | E02 | API and web boot; settings from database; Postgres, Redis, migrations, logging, errors, health; DEV deploy on a Kubernetes cluster; provider interfaces with Ollama and in-memory test doubles; profile-based local development | Kubernetes, provider abstraction, and local development tooling are all established at once, on a repository with no application code yet, ADR-0019, ADR-0021, ADR-0022 |
 | 3 | E03 | Argon2id, sessions, MFA, RBAC, audit, rate limiting, security scanning in CI | Default-deny must fail at startup for an endpoint declaring neither a permission nor an explicit public marker, not at runtime |
 | 4 | E04, E05 | Settings admin UI, content/navigation tables, feature flags, OTel → Grafana, GlitchTip | First trace end to end |
-| 5 | E06, E07 | Type registry, versioning, relationships, publish + outbox; design tokens; restyle components | Publish pipeline correctness |
+| 5 | E06, E07 | Type registry, versioning, relationships, publish + outbox; design tokens; restyle components; Razorpay merchant KYC application (NVL-EXT-01, deferred from Sprint 2) | Publish pipeline correctness |
 | 6 | E08 | Public catalog, read model, caching, FTS, SEO, JSON-LD, sitemap, Core Web Vitals | Cache invalidation correctness |
 | 7 | E09 | **Products, prices, coupons, checkout, Razorpay, webhooks, reconciliation, entitlements** | **Highest-risk sprint. 36 pts, not 42** |
 | 8 | E10 | Learning components, progress, video pipeline, signed URLs, player | Video cost and CDN hit ratio |

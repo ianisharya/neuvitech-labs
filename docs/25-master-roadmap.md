@@ -10,7 +10,7 @@
 | S | Dates | Theme | Outcome | Pts |
 |---|---|---|---|---|
 | 1 | 31 Aug – 13 Sep | **Environment & Repository Foundation** | Both machines run the identical Dev Container; repo governed; first CI green | 32 |
-| 2 | 14 – 27 Sep | **Platform Skeleton & Data Layer** | API + web boot; settings from DB; Postgres, Redis, migrations, logging, errors, health; deploys to DEV | 32 |
+| 2 | 14 – 27 Sep | **Platform Skeleton & Data Layer** | API + web boot; settings from DB; Postgres, Redis, migrations, logging, errors, health; deploys to DEV **on a Kubernetes cluster** (ADR-0019, sized for DEV, hardened for production at Sprint 11); provider interfaces established with Ollama as the initial model implementation and in-memory test doubles (ADR-0021); local development on profile-based Docker Compose, not full-stack-by-default (ADR-0022) | 53 |
 
 ## Phase B: Core Platform · Sprints 3–7 · 28 Sep → 6 Dec 2026
 
@@ -29,7 +29,7 @@
 | 8 | 7 – 20 Dec | **LMS Core & Video Foundations** | Enrol, learn, track progress; adaptive-bitrate recorded video over CDN, one player (docs 10, 41); near-live streaming at scale hardened later in Sprint 22 | 42 |
 | 9 | 21 Dec – 3 Jan | **Assessments, Projects & Free Certifications** | Free certification courses end to end with real assessment | 42 |
 | 10 | 4 – 17 Jan | **Certificates, Brochures & Portfolio** · *track swap* | Verifiable credentials; brochures generated from catalog; co-branded partner certificates (`docs/39` §4, added via ADR-0015) | 42 |
-| 11 | 18 – 31 Jan | **Masterclasses, Live Learning, Subscriptions & Cloud Setup** | Live cohorts; recurring revenue; production infrastructure provisioned | 42 |
+| 11 | 18 – 31 Jan | **Masterclasses, Live Learning, Subscriptions & Production Hardening** | Live cohorts; recurring revenue; the Sprint 2 cluster hardened for production: workload classes per docs/04 and 13, horizontal autoscaling per class, network policies, pod security enforced (already checked in CI), self-hosted stateful services on-cluster, ingress and TLS, CDN (ADR-0019) | 46 |
 
 ## Phase D: Launch · Sprints 12–14 · 1 Feb → 14 Mar 2027
 
@@ -46,7 +46,7 @@
 | 15 | 15 – 28 Mar | Billing, Tax & Invoicing (subscription and one-time; no EMI) | 40 |
 | 16 | 29 Mar – 11 Apr | Careers & Job Board | 40 |
 | 17 | 12 – 25 Apr | Community & Content | 40 |
-| 18 | 26 Apr – 9 May | AI Foundation, gateway, guardrails, RAG | 40 |
+| 18 | 26 Apr – 9 May | AI Foundation, gateway, guardrails, RAG; **Model Context Protocol, server and client roles** (ADR-0020, docs/43) | 46 |
 | 19 | 10 – 23 May | Agentic AI, tutor, advisor, learning paths, **AI Interview Coach** (`docs/39` §5, formalizes a capability anticipated but unbuilt since Sprint 1) | 40 |
 | 20 | 24 May – 6 Jun | ITES/Solutions, Performance at Scale & v2 Release | 40 |
 | 21 | 7 – 20 Jun | **Enterprise: Corporate Sponsorship & Employer Talent Pipeline**: added via ADR-0015, closes a competitive gap found 3 Sep 2026 | 40 |
